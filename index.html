@@ -80,135 +80,7 @@
 
     <section class="products-section">
         <h2>Популярные товары</h2>
-        <div class="products">
-            <article class="card">
-                <a href="product.html?id=1" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи.jpg" alt="Худи Oversize Black">
-                        <span class="badge sale">-30%</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Oversize Black</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price">
-                            <span class="old-price">4990₽</span>
-                            <span class="price">3490₽</span>
-                        </p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="1">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=2" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи2.jpg" alt="Худи Sport Grey">
-                        <span class="badge new">NEW</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Sport Grey</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="price">3990₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="2">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=3" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи3.jpg" alt="Худи Minimal White">
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Minimal White</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="price">4290₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="3">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=4" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи4.jpg" alt="Худи Urban Navy">
-                        <span class="badge sale">-20%</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Urban Navy</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price">
-                            <span class="old-price">4590₽</span>
-                            <span class="price">3670₽</span>
-                        </p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="4">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=5" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка.jpg" alt="Футболка Basic Black">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Basic Black</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1290₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="5">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=6" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка2.jpg" alt="Футболка Graphic White">
-                        <span class="badge new">NEW</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Graphic White</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1590₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="6">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=7" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка3.jpg" alt="Футболка Cotton Grey">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Cotton Grey</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1390₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="7">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=8" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка4.jpg" alt="Футболка Oversize Cream">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Oversize Cream</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1490₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="8">В корзину</button>
-            </article>
-            <article class="card">
-                <a href="product.html?id=9" class="card-link">
-                    <div class="card-image">
-                        <img src="images/рубашка.jpg" alt="Рубашка Casual Blue">
-                    </div>
-                    <div class="card-info">
-                        <h3>Рубашка Casual Blue</h3>
-                        <p class="card-category">Рубашки</p>
-                        <p class="card-price"><span class="price">2790₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="9">В корзину</button>
-            </article>
-        </div>
+        <div class="products" id="popularProducts">
         <a href="catalog.html" class="btn btn-primary">Смотреть весь каталог</a>
     </section>
 
@@ -259,6 +131,49 @@
     </div>
 </footer>
 
+<div class="modal-overlay" id="productModalOverlay"></div>
+<div class="modal" id="productModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="productModalClose" aria-label="Закрыть">×</button>
+        <div class="modal-content">
+            <div class="modal-image">
+                <img src="" alt="" id="modalProductImage">
+            </div>
+            <div class="modal-info">
+                <h2 id="modalProductTitle"></h2>
+                <p class="modal-subtitle">
+                    <span id="modalProductCategory"></span> · Артикул: <span id="modalProductSku"></span>
+                </p>
+                <p class="modal-price" id="modalProductPrice"></p>
+                <p class="modal-desc" id="modalProductDesc"></p>
+                <button class="btn btn-primary btn-add-cart-product" id="modalAddToCart">Добавить в корзину</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="cartModalOverlay"></div>
+<div class="modal cart-modal" id="cartModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="cartModalClose" aria-label="Закрыть корзину">×</button>
+        <h2>Корзина</h2>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                Итого: <span id="cartTotal">0₽</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/shop.js"></script>
 <script src="js/main.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const popular = PRODUCTS.filter(p => p.isPopular);
+    renderProductList('#popularProducts', popular);
+});
+</script>
 </body>
 </html>

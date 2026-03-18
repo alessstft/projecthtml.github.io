@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const products = {
     '1': { title: 'Худи Oversize Black', category: 'Худи', price: '3490', oldPrice: '4990', image: 'images/худи.jpg', desc: 'Качественное худи оверсайз из плотного хлопка. Удобный крой, капюшон с верёвками.' },
     '2': { title: 'Худи Sport Grey', category: 'Худи', price: '3990', image: 'images/худи2.jpg', desc: 'Спортивное худи из мягкого материала. Идеально для прогулок и тренировок.' },
@@ -21,6 +22,19 @@ if (product) {
     document.getElementById('productImage').alt = product.title;
     document.getElementById('productDesc').textContent = product.desc;
     document.getElementById('productBreadcrumb').textContent = product.title;
+=======
+const id = new URLSearchParams(window.location.search).get('id') || '1';
+const product = getProductById(id);
+
+if (product) {
+    document.getElementById('productTitle').textContent = product.name;
+    document.getElementById('productCategory').textContent = product.category === 'hoodies' ? 'Худи' : product.category === 'tshirts' ? 'Футболки' : 'Рубашки';
+    document.getElementById('productPrice').textContent = product.price + '₽';
+    document.getElementById('productImage').src = product.image;
+    document.getElementById('productImage').alt = product.name;
+    document.getElementById('productDesc').textContent = product.description;
+    document.getElementById('productBreadcrumb').textContent = product.name;
+>>>>>>> b6d3d89 (Мои локальные изменения)
 
     const oldPriceEl = document.getElementById('productOldPrice');
     if (product.oldPrice) {
@@ -30,5 +44,9 @@ if (product) {
         oldPriceEl.style.display = 'none';
     }
 
+<<<<<<< HEAD
     document.title = product.title + ' — Fashion Store';
+=======
+    document.title = product.name + ' — Fashion Store';
+>>>>>>> b6d3d89 (Мои локальные изменения)
 }

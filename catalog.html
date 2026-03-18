@@ -36,6 +36,12 @@
     <section class="catalog-header">
         <h1>Каталог</h1>
         <div class="catalog-filters">
+            <select class="filter-select" id="categoryFilter">
+                <option value="">Все категории</option>
+                <option value="hoodies">Худи</option>
+                <option value="tshirts">Футболки</option>
+                <option value="shirts">Рубашки</option>
+            </select>
             <select class="filter-select" id="sortFilter">
                 <option value="popular">По популярности</option>
                 <option value="price-asc">Сначала дешевле</option>
@@ -47,12 +53,6 @@
 
     <div class="catalog-layout">
         <aside class="sidebar">
-            <!-- <h3>Категории</h3>
-            <ul class="sidebar-categories">
-                <li><a href="catalog.html?cat=hoodies" data-cat="hoodies">Худи и свитшоты</a></li>
-                <li><a href="catalog.html?cat=tshirts" data-cat="tshirts">Футболки</a></li>
-                <li><a href="catalog.html?cat=shirts" data-cat="shirts">Рубашки</a></li>
-            </ul> -->
             <h3>Цена</h3>
             <div class="price-range">
                 <input type="number" placeholder="От" id="priceMin" min="0">
@@ -62,159 +62,43 @@
             </div>
         </aside>
 
-        <section class="products catalog-products">
-            <article class="card" data-category="hoodies" data-price="3490" data-new="1">
-                <a href="product.html?id=1" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи.jpg" alt="Худи Oversize Black">
-                        <span class="badge sale">-30%</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Oversize Black</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="old-price">4990₽</span> <span class="price">3490₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="1">В корзину</button>
-            </article>
-            <article class="card" data-category="hoodies" data-price="3990" data-new="1">
-                <a href="product.html?id=2" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи2.jpg" alt="Худи Sport Grey">
-                        <span class="badge new">NEW</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Sport Grey</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="price">3990₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="2">В корзину</button>
-            </article>
-            <article class="card" data-category="hoodies" data-price="4290">
-                <a href="product.html?id=3" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи3.jpg" alt="Худи Minimal White">
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Minimal White</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="price">4290₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="3">В корзину</button>
-            </article>
-            <article class="card" data-category="hoodies" data-price="3670">
-                <a href="product.html?id=4" class="card-link">
-                    <div class="card-image">
-                        <img src="images/худи4.jpg" alt="Худи Urban Navy">
-                        <span class="badge sale">-20%</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Худи Urban Navy</h3>
-                        <p class="card-category">Худи</p>
-                        <p class="card-price"><span class="old-price">4590₽</span> <span class="price">3670₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="4">В корзину</button>
-            </article>
-            <article class="card" data-category="tshirts" data-price="1290">
-                <a href="product.html?id=5" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка.jpg" alt="Футболка Basic Black">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Basic Black</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1290₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="5">В корзину</button>
-            </article>
-            <article class="card" data-category="tshirts" data-price="1590" data-new="1">
-                <a href="product.html?id=6" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка2.jpg" alt="Футболка Graphic White">
-                        <span class="badge new">NEW</span>
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Graphic White</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1590₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="6">В корзину</button>
-            </article>
-            <article class="card" data-category="tshirts" data-price="1390">
-                <a href="product.html?id=7" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка3.jpg" alt="Футболка Cotton Grey">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Cotton Grey</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1390₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="7">В корзину</button>
-            </article>
-            <article class="card" data-category="tshirts" data-price="1490">
-                <a href="product.html?id=8" class="card-link">
-                    <div class="card-image">
-                        <img src="images/тишка4.jpg" alt="Футболка Oversize Cream">
-                    </div>
-                    <div class="card-info">
-                        <h3>Футболка Oversize Cream</h3>
-                        <p class="card-category">Футболки</p>
-                        <p class="card-price"><span class="price">1490₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="8">В корзину</button>
-            </article>
-            <article class="card" data-category="shirts" data-price="2790">
-                <a href="product.html?id=9" class="card-link">
-                    <div class="card-image">
-                        <img src="images/рубашка.jpg" alt="Рубашка Casual Blue">
-                    </div>
-                    <div class="card-info">
-                        <h3>Рубашка Casual Blue</h3>
-                        <p class="card-category">Рубашки</p>
-                        <p class="card-price"><span class="price">2790₽</span></p>
-                    </div>
-                </a>
-                <button class="btn-add-cart" data-id="9">В корзину</button>
-            </article>
-        </section>
-    </div>
-</main>
-
-<footer class="footer">
-    <div class="container">
-        <div class="footer-grid">
-            <div class="footer-col">
-                <h4>Fashion Store</h4>
-                <p>Актуальная мода по доступным ценам</p>
+<div class="modal-overlay" id="productModalOverlay"></div>
+<div class="modal" id="productModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="productModalClose" aria-label="Закрыть">×</button>
+        <div class="modal-content">
+            <div class="modal-image">
+                <img src="" alt="" id="modalProductImage">
             </div>
-            <div class="footer-col">
-                <h4>Каталог</h4>
-                <a href="catalog.html?cat=hoodies">Худи</a>
-                <a href="catalog.html?cat=tshirts">Футболки</a>
-                <a href="catalog.html?cat=shirts">Рубашки</a>
-            </div>
-            <div class="footer-col">
-                <h4>Информация</h4>
-                <a href="about.html">О нас</a>
-                <a href="contacts.html">Контакты</a>
-            </div>
-            <div class="footer-col">
-                <h4>Контакты</h4>
-                <p>+7 (999) 123-45-67</p>
-                <p>info@fashionstore.ru</p>
+            <div class="modal-info">
+                <h2 id="modalProductTitle"></h2>
+                <p class="modal-subtitle">
+                    <span id="modalProductCategory"></span> · Артикул: <span id="modalProductSku"></span>
+                </p>
+                <p class="modal-price" id="modalProductPrice"></p>
+                <p class="modal-desc" id="modalProductDesc"></p>
+                <button class="btn btn-primary btn-add-cart-product" id="modalAddToCart">Добавить в корзину</button>
             </div>
         </div>
     </div>
-</footer>
+</div>
 
+<div class="modal-overlay" id="cartModalOverlay"></div>
+<div class="modal cart-modal" id="cartModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="cartModalClose" aria-label="Закрыть корзину">×</button>
+        <h2>Корзина</h2>
+        <div id="cartItems" class="cart-items"></div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                Итого: <span id="cartTotal">0₽</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/shop.js"></script>
 <script src="js/main.js"></script>
 <script src="js/catalog.js"></script>
 </body>
