@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Товар — Fashion Store</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-flex">
+        <a href="index.html" class="logo">Fashion Store</a>
+        <nav class="nav">
+            <a href="index.html">Главная</a>
+            <a href="catalog.html">Каталог</a>
+            <a href="about.html">О нас</a>
+            <a href="contacts.html">Контакты</a>
+        </nav>
+
+        <form class="search-form">
+            <input type="text" placeholder="Поиск товаров...">
+            <button type="submit">Поиск</button>
+        </form>
+
+        <div class="header-actions">
+            <a href="#" class="cart-link" title="Корзина">
+                <span class="cart-icon">🛒</span>
+                <span class="cart-count">0</span>
+            </a>
+            <a href="#" class="profile-link" title="Профиль">👤</a>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <div class="product-page" id="productContainer">
+        <div class="breadcrumbs">
+            <a href="index.html">Главная</a> / <a href="catalog.html">Каталог</a> / <span id="productBreadcrumb">Товар</span>
+        </div>
+        <div class="product-detail">
+            <div class="product-gallery">
+                <img src="images/худи.jpg" alt="Товар" id="productImage">
+            </div>
+            <div class="product-info">
+                <h1 id="productTitle">Худи Oversize Black</h1>
+                <p class="product-category" id="productCategory">Худи</p>
+                <p class="product-price">
+                    <span class="old-price" id="productOldPrice"></span>
+                    <span class="price" id="productPrice">3490₽</span>
+                </p>
+                <p class="product-desc" id="productDesc">
+                    Качественное худи оверсайз из плотного хлопка. Удобный крой, капюшон с верёвками. Идеально для повседневной носки.
+                </p>
+                <div class="product-size">
+                    <label>Размер:</label>
+                    <select id="productSize">
+                        <option value="S">S</option>
+                        <option value="M" selected>M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                    </select>
+                </div>
+                <div class="product-actions">
+                    <button class="btn btn-primary btn-add-cart-product" id="addToCartBtn">Добавить в корзину</button>
+                </div>
+                <div class="product-features">
+                    <p>🚚 Бесплатная доставка от 3000₽</p>
+                    <p>↩️ Возврат в течение 14 дней</p>
+                    <p>🔒 Безопасная оплата</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Fashion Store</h4>
+                <p>Актуальная мода по доступным ценам</p>
+            </div>
+            <div class="footer-col">
+                <h4>Информация</h4>
+                <a href="about.html">О нас</a>
+                <a href="contacts.html">Контакты</a>
+            </div>
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <p>+7 (999) 123-45-67</p>
+                <p>info@fashionstore.ru</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script src="js/product.js"></script>
+</body>
+</html>

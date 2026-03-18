@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контакты — Fashion Store</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="header">
+    <div class="container header-flex">
+        <a href="index.html" class="logo">Fashion Store</a>
+        <nav class="nav">
+            <a href="index.html">Главная</a>
+            <a href="catalog.html">Каталог</a>
+            <a href="about.html">О нас</a>
+            <a href="contacts.html" class="active">Контакты</a>
+        </nav>
+
+        <form class="search-form">
+            <input type="text" placeholder="Поиск товаров...">
+            <button type="submit">Поиск</button>
+        </form>
+
+        <div class="header-actions">
+            <a href="#" class="cart-link" title="Корзина">
+                <span class="cart-icon">🛒</span>
+                <span class="cart-count">0</span>
+            </a>
+            <a href="#" class="profile-link" title="Профиль">👤</a>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="page-content contacts-page">
+        <h1>Связаться с нами</h1>
+        <p class="lead">Мы всегда рады помочь! Свяжитесь с нами любым удобным способом.</p>
+
+        <div class="contacts-grid">
+            <div class="contact-info">
+                <h2>Контактная информация</h2>
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <div>
+                        <strong>Адрес</strong>
+                        <p>г. Санкт-Петербург, где-то тут</p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">📞</span>
+                    <div>
+                        <strong>Телефон</strong>
+                        <p><a href="tel:+79991234567">+7 (999) 123-45-67</a></p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">✉️</span>
+                    <div>
+                        <strong>Email</strong>
+                        <p><a href="mailto:info@fashionstore.ru">info@fashionstore.ru</a></p>
+                    </div>
+                </div>
+                <div class="contact-item">
+                    <span class="contact-icon">🕐</span>
+                    <div>
+                        <strong>Режим работы</strong>
+                        <p>Пн-Пт: 9:00 — 20:00<br>Сб-Вс: 10:00 — 18:00</p>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://t.me/dnevnichok_alesss" class="social-link" title="Telegram">TG</a>
+                    <a href="#" class="social-link" title="VK">VK</a>
+                </div>
+            </div>
+
+            <div class="contact-form-block">
+                <h2>Напишите нам</h2>
+                <form class="contact-form" id="contactForm">
+                    <label>
+                        Имя
+                        <input type="text" name="name" required placeholder="Ваше имя">
+                    </label>
+                    <label>
+                        Email
+                        <input type="email" name="email" required placeholder="example@mail.ru">
+                    </label>
+                    <label>
+                        Телефон
+                        <input type="tel" name="phone" placeholder="+7 (999) 123-45-67">
+                    </label>
+                    <label>
+                        Сообщение
+                        <textarea name="message" rows="5" required placeholder="Ваше сообщение..."></textarea>
+                    </label>
+                    <button type="submit" class="btn btn-primary">Отправить</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="map-block">
+            <h2>Как нас найти</h2>
+            <div class="map-placeholder">
+                <p>📍 г. Санкт-Петербург, где-то тут</p>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Fashion Store</h4>
+                <p>Актуальная мода по доступным ценам</p>
+            </div>
+            <div class="footer-col">
+                <h4>Каталог</h4>
+                <a href="catalog.html?cat=hoodies">Худи</a>
+                <a href="catalog.html?cat=tshirts">Футболки</a>
+                <a href="catalog.html?cat=shirts">Рубашки</a>
+            </div>
+            <div class="footer-col">
+                <h4>Информация</h4>
+                <a href="about.html">О нас</a>
+                <a href="contacts.html">Контакты</a>
+            </div>
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <p>+7 (999) ###-##-##</p>
+                <p>info@fashionstore.ru</p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="js/main.js"></script>
+<script>
+document.getElementById('contactForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    alert('Спасибо! Ваше сообщение отправлено. Мы свяжемся с вами в ближайшее время.');
+    this.reset();
+});
+</script>
+</body>
+</html>
