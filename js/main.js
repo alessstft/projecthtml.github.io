@@ -21,6 +21,7 @@ function addToCart(id) {
     showToast('Товар добавлен в корзину');
 }
 
+// Имитация ajax-запроса при добавлении в корзину
 function sendAddToCartRequest(id) {
     try {
         fetch('https://httpbin.org/post', {
@@ -67,6 +68,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Корзина (модальное окно)
 function renderCart() {
     const container = document.getElementById('cartItems');
     const totalEl = document.getElementById('cartTotal');
@@ -146,6 +148,7 @@ document.addEventListener('click', (e) => {
         if (!item) return;
 
         if (minusBtn) {
+            // уменьшаем количество, если после уменьшения <= 0 — удаляем товар из корзины
             const currentQty = item.quantity || 1;
             const newQty = currentQty - 1;
             if (newQty <= 0) {
