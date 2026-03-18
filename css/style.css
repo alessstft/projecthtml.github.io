@@ -32,14 +32,12 @@ img {
     display: block;
 }
 
-/* === Container === */
 .container {
     width: 92%;
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* === Header === */
 .header {
     background: rgba(0, 0, 0, 0.95);
     padding: 14px 0;
@@ -151,7 +149,6 @@ img {
     padding: 4px;
 }
 
-/* === Promo === */
 .promo {
     background: linear-gradient(90deg, var(--color-accent), #10b981);
     color: #000;
@@ -176,7 +173,6 @@ img {
     to { transform: translateX(-50%); }
 }
 
-/* === Hero === */
 .hero {
     text-align: center;
     padding: 50px 20px;
@@ -192,7 +188,6 @@ img {
     font-size: 1.1rem;
 }
 
-/* === Categories === */
 .categories {
     padding: 30px 0;
 }
@@ -235,7 +230,6 @@ img {
     font-size: 0.9rem;
 }
 
-/* === Products === */
 .products-section {
     padding: 40px 0;
 }
@@ -359,7 +353,6 @@ img {
     transform: translateY(-1px);
 }
 
-/* === Buttons === */
 .btn {
     padding: 12px 24px;
     border-radius: 8px;
@@ -383,7 +376,6 @@ img {
     font-size: 0.9rem;
 }
 
-/* === Features === */
 .features {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -413,7 +405,6 @@ img {
     font-size: 0.9rem;
 }
 
-/* === Footer === */
 .footer {
     background: var(--color-surface);
     padding: 50px 0 20px;
@@ -456,7 +447,6 @@ img {
     font-size: 0.85rem;
 }
 
-/* === Page content === */
 .page-content {
     padding: 50px 0;
 }
@@ -471,7 +461,6 @@ img {
     margin-bottom: 40px;
 }
 
-/* === About === */
 .about-grid {
     display: grid;
     gap: 30px;
@@ -546,7 +535,6 @@ img {
     color: var(--color-text-muted);
 }
 
-/* === Contacts === */
 .contacts-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -652,7 +640,6 @@ img {
     color: var(--color-text-muted);
 }
 
-/* === Catalog === */
 .catalog-header {
     display: flex;
     justify-content: space-between;
@@ -715,9 +702,9 @@ img {
 
 .price-range {
     display: flex;
-    flex-direction: row;  /* Горизонтальное расположение */
-    align-items: center;  /* Выравнивание по центру по вертикали */
-    flex-wrap: wrap;      /* Перенос на новую строку при необходимости */
+    flex-direction: row;  
+    align-items: center;  
+    flex-wrap: wrap;      
     gap: 8px;
     margin-top: 8px;
 }
