@@ -21,7 +21,6 @@ function addToCart(id) {
     showToast('Товар добавлен в корзину');
 }
 
-// Имитация ajax-запроса при добавлении в корзину
 function sendAddToCartRequest(id) {
     try {
         fetch('https://httpbin.org/post', {
@@ -68,7 +67,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Корзина (модальное окно)
 function renderCart() {
     const container = document.getElementById('cartItems');
     const totalEl = document.getElementById('cartTotal');
