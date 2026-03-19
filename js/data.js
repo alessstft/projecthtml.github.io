@@ -24,14 +24,14 @@ const PRODUCTS = [
     },
     {
         id: '3',
-        name: 'Худи Minimal White',
+        name: 'Худи Red',
         price: 4290,
         image: 'images/худи3.jpg',
         sku: '235203',
         category: 'hoodies',
         isNew: false,
         isPopular: true,
-        description: 'Минималистичное худи белого цвета. Лаконичный дизайн для повседневной носки.'
+        description: 'Красное худи из качественного хлопка. Удобный крой, с капюшоном.'
     },
     {
         id: '4',
@@ -43,22 +43,22 @@ const PRODUCTS = [
         category: 'hoodies',
         isNew: false,
         isPopular: true,
-        description: 'Городское худи тёмно-синего цвета. Стиль оверсайз.'
+        description: 'Городское худи серого цвета. Стиль оверсайз.'
     },
     {
         id: '5',
-        name: 'Футболка Basic Black',
+        name: 'Футболка Grey',
         price: 1290,
         image: 'images/тишка.jpg',
         sku: '6324891',
         category: 'tshirts',
         isNew: false,
         isPopular: true,
-        description: 'Классическая базовая футболка чёрного цвета. 100% хлопок.'
+        description: 'Футболка серого цвета. Хлопок премиум качества.'
     },
     {
         id: '6',
-        name: 'Футболка Graphic White',
+        name: 'Футболка Graphic Yellow',
         price: 1590,
         image: 'images/тишка2.jpg',
         sku: '34698232',
@@ -69,25 +69,25 @@ const PRODUCTS = [
     },
     {
         id: '7',
-        name: 'Футболка Cotton Grey',
+        name: 'Футболка с бабочкой',
         price: 1390,
         image: 'images/тишка3.jpg',
         sku: '4382973',
         category: 'tshirts',
         isNew: false,
         isPopular: true,
-        description: 'Мягкая хлопковая футболка серого цвета.'
+        description: 'Мягкая хлопковая футболка.'
     },
     {
         id: '8',
-        name: 'Футболка Oversize Cream',
+        name: 'Футболкас бабочкой на спине',
         price: 1490,
         image: 'images/тишка4.jpg',
         sku: '8491704',
         category: 'tshirts',
         isNew: false,
         isPopular: true,
-        description: 'Оверсайз футболка бежевого оттенка.'
+        description: 'Оверсайз футболка с открытой спиной.'
     },
     {
         id: '9',
@@ -98,7 +98,7 @@ const PRODUCTS = [
         category: 'shirts',
         isNew: false,
         isPopular: true,
-        description: 'Кэжуал рубашка голубого цвета. Идеально для офиса и отдыха.'
+        description: 'Кэжуал рубашка белого цвета с муравьями. Лёгкая и удобная.'
     }
 ];
 
