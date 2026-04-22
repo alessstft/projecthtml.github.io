@@ -1,0 +1,21 @@
+@startuml
+
+actor Покупатель
+participant "Веб-сайт" as System
+participant "База данных" as DB
+
+Покупатель -> System : Открыть каталог
+System -> DB : Получить товары
+DB --> System : Список товаров
+
+Покупатель -> System : Добавить товар в корзину
+System -> DB : Обновить корзину
+
+Покупатель -> System : Оформить заказ
+System -> DB : Создать заказ
+System -> DB : Списать остатки товаров
+
+DB --> System : OK
+System --> Покупатель : Подтверждение заказа
+
+@enduml

@@ -146,7 +146,6 @@ document.addEventListener('click', (e) => {
         if (!item) return;
 
         if (minusBtn) {
-            // уменьшаем количество, если после уменьшения <= 0 — удаляем товар из корзины
             const currentQty = item.quantity || 1;
             const newQty = currentQty - 1;
             if (newQty <= 0) {
