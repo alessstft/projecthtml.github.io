@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Корзина — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container page-content">
+    <h1>Корзина</h1>
+    {% if cart_items %}
+    <table class="cart-table">
+        <thead>
+            <tr>
+                <th>Товар</th>
+                <th>Размер</th>
+                <th>Количество</th>
+                <th>Цена</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in cart_items %}
+            <tr>
+                <td>{{ item.product_name|default:item.product.name }}</td>
+                <td>{{ item.size }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.product.price }}₽</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <div class="cart-summary">
+        <p>Итого: {{ cart_total }}₽</p>
+        <a class="btn btn-primary" href="{% url 'checkout' %}">Оформить заказ</a>
+    </div>
+    {% else %}
+    <p>Ваша корзина пуста.</p>
+    {% endif %}
+</main>
+{% endblock %}

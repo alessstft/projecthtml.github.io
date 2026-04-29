@@ -1,10 +1,11 @@
+// Fashion Store - Product Data
 const PRODUCTS = [
     {
         id: '1',
         name: 'Худи Oversize Black',
         price: 3490,
         oldPrice: 4990,
-        image: 'images/худи.jpg',
+        image: '/static/images/худи.jpg',
         sku: '4322231',
         category: 'hoodies',
         isNew: false,
@@ -15,7 +16,7 @@ const PRODUCTS = [
         id: '2',
         name: 'Худи Sport Grey',
         price: 3990,
-        image: 'images/худи2.jpg',
+        image: '/static/images/худи2.jpg',
         sku: '2452342',
         category: 'hoodies',
         isNew: true,
@@ -26,7 +27,7 @@ const PRODUCTS = [
         id: '3',
         name: 'Худи Red',
         price: 4290,
-        image: 'images/худи3.jpg',
+        image: '/static/images/худи3.jpg',
         sku: '235203',
         category: 'hoodies',
         isNew: false,
@@ -38,7 +39,7 @@ const PRODUCTS = [
         name: 'Худи Urban Navy',
         price: 3670,
         oldPrice: 4590,
-        image: 'images/худи4.jpg',
+        image: '/static/images/худи4.jpg',
         sku: '4235304',
         category: 'hoodies',
         isNew: false,
@@ -49,7 +50,7 @@ const PRODUCTS = [
         id: '5',
         name: 'Футболка Grey',
         price: 1290,
-        image: 'images/тишка.jpg',
+        image: '/static/images/тишка.jpg',
         sku: '6324891',
         category: 'tshirts',
         isNew: false,
@@ -60,7 +61,7 @@ const PRODUCTS = [
         id: '6',
         name: 'Футболка Graphic Yellow',
         price: 1590,
-        image: 'images/тишка2.jpg',
+        image: '/static/images/тишка2.jpg',
         sku: '34698232',
         category: 'tshirts',
         isNew: true,
@@ -71,7 +72,7 @@ const PRODUCTS = [
         id: '7',
         name: 'Футболка с бабочкой',
         price: 1390,
-        image: 'images/тишка3.jpg',
+        image: '/static/images/тишка3.jpg',
         sku: '4382973',
         category: 'tshirts',
         isNew: false,
@@ -80,9 +81,9 @@ const PRODUCTS = [
     },
     {
         id: '8',
-        name: 'Футболкас бабочкой на спине',
+        name: 'Футболка с бабочкой на спине',
         price: 1490,
-        image: 'images/тишка4.jpg',
+        image: '/static/images/тишка4.jpg',
         sku: '8491704',
         category: 'tshirts',
         isNew: false,
@@ -93,7 +94,7 @@ const PRODUCTS = [
         id: '9',
         name: 'Рубашка Casual Blue',
         price: 2790,
-        image: 'images/рубашка.jpg',
+        image: '/static/images/рубашка.jpg',
         sku: '71498781',
         category: 'shirts',
         isNew: false,
@@ -105,4 +106,3 @@ const PRODUCTS = [
 function getProductById(id) {
     return PRODUCTS.find(p => p.id === String(id));
 }
-

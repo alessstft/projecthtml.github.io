@@ -1,3 +1,5 @@
+// Fashion Store - Shop Functions
+
 function createProductCardHTML(product) {
     const hasOld = !!product.oldPrice;
     const isNew = !!product.isNew;
@@ -5,21 +7,22 @@ function createProductCardHTML(product) {
     if (hasOld) badges.push('<span class="badge sale">-30%</span>');
     if (isNew) badges.push('<span class="badge new">NEW</span>');
 
+    const categoryName = product.category === 'hoodies' ? 'Худи' : product.category === 'tshirts' ? 'Футболки' : 'Рубашки';
+
     return `
         <article class="card" data-id="${product.id}" data-category="${product.category}" data-price="${product.price}" data-new="${product.isNew ? '1' : '0'}">
-            <a href="product.html?id=${product.id}" class="card-link">
+            <a href="/product/${product.id}" class="card-link">
                 <div class="card-image">
                     <img src="${product.image}" alt="${product.name}">
                     ${badges.join('')}
                 </div>
                 <div class="card-info">
                     <h3 class="card-title">${product.name}</h3>
-                    <p class="card-category">${product.category === 'hoodies' ? 'Худи' : product.category === 'tshirts' ? 'Футболки' : 'Рубашки'}</p>
+                    <p class="card-category">${categoryName}</p>
                     <p class="card-price">
                         ${hasOld ? `<span class="old-price">${product.oldPrice}₽</span>` : ''}
                         <span class="price">${product.price}₽</span>
                     </p>
-                    <p class="card-sku">Артикул: ${product.sku}</p>
                 </div>
             </a>
             <button class="btn-add-cart" data-id="${product.id}">В корзину</button>
@@ -88,4 +91,3 @@ function setupProductModal() {
 document.addEventListener('DOMContentLoaded', () => {
     setupProductModal();
 });
-

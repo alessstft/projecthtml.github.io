@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Заказ принят — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container page-content">
+    <h1>Спасибо за заказ!</h1>
+    <p>Номер заказа: {{ order.id }}</p>
+    <p>Имя: {{ order.first_name }} {{ order.last_name }}</p>
+    <p>Сумма заказа: {{ order.total }}₽</p>
+    <a class="btn btn-primary" href="{% url 'index' %}">Вернуться на главную</a>
+</main>
+{% endblock %}

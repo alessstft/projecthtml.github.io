@@ -1,34 +1,64 @@
+// Fashion Store - Main JavaScript
+
 const cartState = {
     items: JSON.parse(localStorage.getItem('fashionCart')) || []
 };
 
-function updateCartCount() {
-    const count = cartState.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-    document.querySelectorAll('.cart-count').forEach(el => {
-        el.textContent = count;
-    });
-}
-
-function addToCart(id) {
-    const existing = cartState.items.find(item => item.id === String(id));
-    if (existing) {
-        existing.quantity = (existing.quantity || 1) + 1;
-    } else {
-        cartState.items.push({ id: String(id), quantity: 1 });
-    }
-    localStorage.setItem('fashionCart', JSON.stringify(cartState.items));
-    updateCartCount();
-    showToast('Товар добавлен в корзину');
-}
-
-function sendAddToCartRequest(id) {
+async function addToCart(productId, size = 'M') {
     try {
-        fetch('https://httpbin.org/post', {
+        const response = await fetch('/api/cart/add/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId: id })
-        }).catch(() => {});
-    } catch (e) {}
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ product_id: productId, quantity: 1, size: size })
+        });
+        const data = await response.json();
+        if (data.success) {
+            updateCartCount(data.cart_count);
+            showToast('Товар добавлен в корзину');
+        }
+    } catch (err) {
+        // Fallback to localStorage
+        const existing = cartState.items.find(item => item.id === String(productId));
+        if (existing) {
+            existing.quantity = (existing.quantity || 1) + 1;
+        } else {
+            cartState.items.push({ id: String(productId), quantity: 1, size: size });
+        }
+        localStorage.setItem('fashionCart', JSON.stringify(cartState.items));
+        updateCartCount();
+        showToast('Товар добавлен в корзину');
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function updateCartCount(count) {
+    if (count !== undefined) {
+        document.querySelectorAll('.cart-count').forEach(el => {
+            el.textContent = count || 0;
+        });
+    } else {
+        const total = cartState.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        document.querySelectorAll('.cart-count').forEach(el => {
+            el.textContent = total;
+        });
+    }
 }
 
 function showToast(message) {
@@ -43,30 +73,18 @@ function showToast(message) {
     setTimeout(() => toast.remove(), 3000);
 }
 
-updateCartCount();
-
-document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.btn-add-cart');
-    if (btn) {
-        e.preventDefault();
-        const id = btn.dataset.id;
-        if (id) {
-            addToCart(id);
-            sendAddToCartRequest(id);
-        }
+async function loadCartCount() {
+    try {
+        const response = await fetch('/api/cart/');
+        const items = await response.json();
+        const count = items.reduce((sum, item) => sum + item.quantity, 0);
+        updateCartCount(count);
+    } catch (err) {
+        console.error('Error loading cart count:', err);
     }
+}
 
-    const productBtn = e.target.closest('.btn-add-cart-product');
-    if (productBtn) {
-        e.preventDefault();
-        const fromDataset = productBtn.dataset?.id;
-        const fromUrl = new URLSearchParams(window.location.search).get('id');
-        const id = fromDataset || fromUrl || '1';
-        addToCart(id);
-        sendAddToCartRequest(id);
-    }
-});
-
+// Cart Modal Functions
 function renderCart() {
     const container = document.getElementById('cartItems');
     const totalEl = document.getElementById('cartTotal');
@@ -128,7 +146,39 @@ function closeCartModal() {
     modal.classList.remove('is-open');
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    loadCartCount();
+
+    // Cart modal event listeners
+    document.getElementById('cartModalOverlay')?.addEventListener('click', closeCartModal);
+    document.getElementById('cartModalClose')?.addEventListener('click', closeCartModal);
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeCartModal();
+    });
+});
+
 document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.btn-add-cart');
+    if (btn) {
+        e.preventDefault();
+        const id = btn.dataset.id;
+        if (id) {
+            addToCart(id);
+        }
+    }
+
+    const productBtn = e.target.closest('.btn-add-cart-product');
+    if (productBtn) {
+        e.preventDefault();
+        const id = productBtn.dataset.id;
+        if (id) {
+            const sizeSelect = document.getElementById('productSize');
+            const size = sizeSelect ? sizeSelect.value : 'M';
+            addToCart(id, size);
+        }
+    }
+
+    // Cart modal controls
     if (e.target.closest('.cart-link')) {
         e.preventDefault();
         openCartModal();
@@ -163,23 +213,4 @@ document.addEventListener('click', (e) => {
         updateCartCount();
         renderCart();
     }
-});
-
-document.getElementById('cartModalOverlay')?.addEventListener('click', closeCartModal);
-document.getElementById('cartModalClose')?.addEventListener('click', closeCartModal);
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-        closeCartModal();
-    }
-});
-
-document.querySelectorAll('.search-form').forEach(form => {
-    form?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const input = form.querySelector('input');
-        const query = input?.value?.trim();
-        if (query) {
-            window.location.href = 'catalog.html?search=' + encodeURIComponent(query);
-        }
-    });
 });

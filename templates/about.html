@@ -1,37 +1,8 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>О нас - Fashion Store</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-<header class="header">
-    <div class="container header-flex">
-        <a href="index.html" class="logo">Fashion Store</a>
-        <nav class="nav">
-            <a href="index.html">Главная</a>
-            <a href="catalog.html">Каталог</a>
-            <a href="about.html" class="active">О нас</a>
-            <a href="contacts.html">Контакты</a>
-        </nav>
+{% extends 'base.html' %}
 
-        <form class="search-form">
-            <input type="text" placeholder="Поиск товаров...">
-            <button type="submit">Поиск</button>
-        </form>
+{% block title %}О нас - Fashion Store{% endblock %}
 
-        <div class="header-actions">
-            <a href="#" class="cart-link" title="Корзина">
-                <span class="cart-icon">🛒</span>
-                <span class="cart-count">0</span>
-            </a>
-            <a href="#" class="profile-link" title="Профиль">👤</a>
-        </div>
-    </div>
-</header>
-
+{% block content %}
 <main class="container">
     <section class="page-content about-page">
         <h1>О нашем магазине</h1>
@@ -85,36 +56,4 @@
         </div>
     </section>
 </main>
-
-<footer class="footer">
-    <div class="container">
-        <div class="footer-grid">
-            <div class="footer-col">
-                <h4>Fashion Store</h4>
-                <p>Актуальная мода по доступным ценам</p>
-            </div>
-            <div class="footer-col">
-                <h4>Каталог</h4>
-                <a href="catalog.html?cat=hoodies">Худи</a>
-                <a href="catalog.html?cat=tshirts">Футболки</a>
-                <a href="catalog.html?cat=shirts">Рубашки</a>
-            </div>
-            <div class="footer-col">
-                <h4>Информация</h4>
-                <a href="about.html">О нас</a>
-                <a href="contacts.html">Контакты</a>
-            </div>
-            <div class="footer-col">
-                <h4>Контакты</h4>
-                <p>+7 (999) 123-45-67</p>
-                <p>info@fashionstore.ru</p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>Fashion Store</p>
-        </div>
-    </div>
-</footer>
-<script src="js/main.js"></script> 
-</body>
-</html>
+{% endblock %}

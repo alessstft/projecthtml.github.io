@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Оформление заказа — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container page-content">
+    <h1>Оформление заказа</h1>
+    {% if cart_items %}
+    <form class="checkout-form" id="checkoutForm">
+        {% csrf_token %}
+        <div class="form-group">
+            <label>Имя</label>
+            <input type="text" name="first_name" value="{{ user.name }}" required>
+        </div>
+        <div class="form-group">
+            <label>Фамилия</label>
+            <input type="text" name="last_name" value="{{ user.last_name }}">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" name="email" value="{{ user.email }}" required>
+        </div>
+        <div class="form-group">
+            <label>Телефон</label>
+            <input type="text" name="phone" value="{{ user.phone }}">
+        </div>
+        <div class="form-group">
+            <label>Тип доставки</label>
+            <select name="delivery_type">
+                <option value="courier">Курьер</option>
+                <option value="pickup">Самовывоз</option>
+                <option value="express">Экспресс</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Адрес</label>
+            <textarea name="address"></textarea>
+        </div>
+        <div class="form-group">
+            <label>Комментарий</label>
+            <textarea name="comment"></textarea>
+        </div>
+        <div class="cart-summary">
+            <p>Товаров: {{ cart_items|length }}</p>
+            <p>Сумма: {{ cart_total }}₽</p>
+        </div>
+        <button class="btn btn-primary" type="submit">Оформить заказ</button>
+    </form>
+    {% else %}
+    <p>Корзина пуста. Добавьте товары перед оформлением заказа.</p>
+    {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('checkoutForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const payload = Object.fromEntries(formData.entries());
+    const response = await fetch('{% url 'api_create_order' %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (data.success) {
+        window.location.href = '{% url 'order_success' 0 %}'.replace('/0/', '/' + data.order_id + '/');
+    } else {
+        alert(data.error || 'Ошибка оформления заказа');
+    }
+});
+</script>
+{% endblock %}

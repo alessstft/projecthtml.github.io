@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Админ панель — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container page-content">
+    <h1>Админ-панель</h1>
+    <section class="dashboard-cards">
+        <div class="dashboard-card"><strong>Товары:</strong> {{ products.count }}</div>
+        <div class="dashboard-card"><strong>Заказы:</strong> {{ orders.count }}</div>
+        <div class="dashboard-card"><strong>Пользователи:</strong> {{ users.count }}</div>
+        <div class="dashboard-card"><strong>Категории:</strong> {{ categories.count }}</div>
+    </section>
+    <section class="orders-list">
+        <h2>Последние заказы</h2>
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Клиент</th>
+                    <th>Сумма</th>
+                    <th>Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders|slice:10 %}
+                <tr>
+                    <td>{{ order.id }}</td>
+                    <td>{{ order.first_name }} {{ order.last_name }}</td>
+                    <td>{{ order.total }}₽</td>
+                    <td>{{ order.status }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</main>
+{% endblock %}

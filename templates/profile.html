@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Профиль — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container page-content">
+    <h1>Мой профиль</h1>
+
+    <div class="profile-layout">
+        <aside class="profile-sidebar">
+            <div class="profile-avatar">👤</div>
+            <div class="profile-info">
+                <h2>{{ user.name|default:user.email }}</h2>
+                <p class="profile-email">{{ user.email }}</p>
+            </div>
+
+            <nav class="profile-nav">
+                <a href="#" class="profile-nav-item active">📦 Мои заказы</a>
+                <a href="#" class="profile-nav-item">💰 Бонусы</a>
+                <a href="#" class="profile-nav-item">⚙️ Настройки</a>
+            </nav>
+
+            <a href="{% url 'logout' %}" class="btn btn-logout">Выйти</a>
+        </aside>
+
+        <section class="profile-content">
+            <div class="profile-section active">
+                <h2>Мои заказы</h2>
+                {% if orders %}
+                <div class="orders-list">
+                    {% for order in orders %}
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <span class="order-id">Заказ #{{ order.id }}</span>
+                                <span class="order-date">{{ order.created_at|date:'d.m.Y H:i' }}</span>
+                            </div>
+                            <span class="order-status {{ order.status }}">{{ order.get_status_display }}</span>
+                        </div>
+                        <div class="order-items-preview">
+                            {% for item in order.items.all %}
+                            <img src="{{ item.product_image }}" alt="{{ item.product_name }}">
+                            {% endfor %}
+                        </div>
+                        <div class="order-footer">
+                            <span class="order-total">{{ order.total }}₽</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p style="margin-top: 20px;"><strong>Всего потрачено:</strong> {{ total_spent }}₽</p>
+                {% else %}
+                <p style="color: var(--color-text-muted); text-align: center; padding: 40px;">
+                    У вас пока нет заказов.
+                </p>
+                <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+                {% endif %}
+            </div>
+
+            <div class="bonus-card">
+                <div class="bonus-balance-display">
+                    <div>
+                        <span style="color: var(--color-text-muted); font-size: 0.9rem;">Бонусный баланс</span>
+                        <span class="bonus-amount">{{ user.bonus_balance }}₽</span>
+                    </div>
+                    <span class="bonus-level {{ user.bonus_level }}">{{ user.get_bonus_level_display }}</span>
+                </div>
+                <p style="color: var(--color-text-muted); font-size: 0.9rem;">
+                    Кэшбэк начисляется после каждого заказа. Уровень лояльности повышается при накоплении определённой суммы.
+                </p>
+            </div>
+        </section>
+    </div>
+</main>
+{% endblock %}

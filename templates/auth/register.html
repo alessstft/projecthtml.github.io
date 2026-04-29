@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Регистрация — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container auth-page">
+    <div class="auth-card">
+        <a href="{% url 'index' %}" class="logo">Fashion Store</a>
+        <h1>Регистрация</h1>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <p class="form-error">{{ error }}</p>
+                {% endfor %}
+            {% endif %}
+
+            <label>
+                Имя
+                <input type="text" name="name" placeholder="Ваше имя" value="{{ form.name.value|default:'' }}" required>
+                {% if form.name.errors %}
+                    <span class="form-error">{{ form.name.errors.0 }}</span>
+                {% endif %}
+            </label>
+
+            <label>
+                Email
+                <input type="email" name="email" placeholder="example@mail.ru" value="{{ form.email.value|default:'' }}" required>
+                {% if form.email.errors %}
+                    <span class="form-error">{{ form.email.errors.0 }}</span>
+                {% endif %}
+            </label>
+
+            <label>
+                Пароль
+                <input type="password" name="password" placeholder="Минимум 6 символов" required>
+                {% if form.password.errors %}
+                    <span class="form-error">{{ form.password.errors.0 }}</span>
+                {% endif %}
+            </label>
+
+            <label>
+                Подтвердите пароль
+                <input type="password" name="password2" placeholder="Повторите пароль" required>
+                {% if form.password2.errors %}
+                    <span class="form-error">{{ form.password2.errors.0 }}</span>
+                {% endif %}
+            </label>
+
+            <button class="btn btn-primary" type="submit">Зарегистрироваться</button>
+        </form>
+        <p class="auth-footer">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+    </div>
+</main>
+{% endblock %}
