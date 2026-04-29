@@ -6,44 +6,10 @@
 
 ```
 projecthtml.github.io/
-├── fashionstore/           # Django проект
-│   ├── __init__.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── store/                  # Django приложение магазина
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── forms.py
-│   ├── management/
-│   │   └── commands/
-│   │       └── initdata.py
-│   ├── models.py
-│   ├── urls.py
-│   └── views.py
-├── templates/              # Django шаблоны
-│   ├── auth/
-│   │   ├── login.html
-│   │   └── register.html
-│   ├── admin/
-│   │   └── index.html
-│   ├── base.html
-│   ├── cart.html
-│   ├── catalog.html
-│   ├── checkout.html
-│   ├── contacts.html
-│   ├── index.html
-│   ├── order_success.html
-│   ├── product.html
-│   ├── profile.html
-│   └── about.html
-├── app/                    # Статические файлы и старые Flask-ресурсы
-│   └── static/
-│       ├── css/
-│       │   └── style.css
-│       └── js/
-│           └── main.js
+├── fashionstore/           #  проект
+├── store/                  #  приложение магазина
+├── templates/              #  шаблоны
+├── app/                    # Статические файлы 
 ├── manage.py               # Точка входа Django
 ├── requirements.txt        # Зависимости
 └── README.md               # Документация

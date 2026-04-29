@@ -51,4 +51,8 @@ urlpatterns = [
     path('api/admin/categories/', views.api_admin_create_category, name='api_admin_create_category'),
     path('api/admin/categories/<int:category_id>/', views.api_admin_update_category, name='api_admin_update_category'),
     path('api/admin/categories/<int:category_id>/delete/', views.api_admin_delete_category, name='api_admin_delete_category'),
+
+    # User Measurements API
+    path('api/measurements/', views.api_get_user_measurements, name='api_get_user_measurements'),
+    path('api/measurements/update/', views.api_update_user_measurements, name='api_update_user_measurements'),
 ]

@@ -18,6 +18,7 @@
             <nav class="profile-nav">
                 <button class="profile-nav-item active" data-section="orders">📦 Мои заказы</button>
                 <button class="profile-nav-item" data-section="bonuses">💰 Бонусы</button>
+                <button class="profile-nav-item" data-section="measurements">📐 Мои размеры</button>
                 <button class="profile-nav-item" data-section="settings">⚙️ Настройки</button>
             </nav>
 
@@ -107,6 +108,79 @@
                 </div>
             </div>
 
+            <!-- Measurements Section -->
+            <div class="profile-section" id="section-measurements">
+                <h2>Мои размеры</h2>
+                <p style="color: var(--color-text-muted); margin-bottom: 24px;">
+                    Укажите параметры тела для виртуальной примерки одежды
+                </p>
+
+                <div class="measurements-container">
+                    <!-- 3D Preview -->
+                    <div class="mannequin-preview">
+                        <div id="profile-mannequin-container" style="height: 400px; background: #1a1a1a; border-radius: 12px;"></div>
+                    </div>
+
+                    <!-- Form -->
+                    <form class="measurements-form" id="measurementsForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="height">Рост (см)</label>
+                                <input type="number" id="height" name="height" min="140" max="220" value="170">
+                            </div>
+                            <div class="form-group">
+                                <label for="weight">Вес (кг)</label>
+                                <input type="number" id="weight" name="weight" min="40" max="200" value="70">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="chest">Грудь (см)</label>
+                                <input type="number" id="chest" name="chest" min="70" max="150" value="92">
+                            </div>
+                            <div class="form-group">
+                                <label for="waist">Талия (см)</label>
+                                <input type="number" id="waist" name="waist" min="60" max="140" value="76">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="hips">Бёдра (см)</label>
+                                <input type="number" id="hips" name="hips" min="80" max="160" value="98">
+                            </div>
+                            <div class="form-group">
+                                <label for="shoulders">Плечи (см)</label>
+                                <input type="number" id="shoulders" name="shoulders" min="90" max="160" value="116">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="arm_length">Рука (см)</label>
+                                <input type="number" id="arm_length" name="arm_length" min="40" max="80" value="58">
+                            </div>
+                            <div class="form-group">
+                                <label for="leg_length">Нога (см)</label>
+                                <input type="number" id="leg_length" name="leg_length" min="60" max="110" value="80">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="gender">Тип телосложения</label>
+                            <select id="gender" name="gender">
+                                <option value="neutral">Универсальный</option>
+                                <option value="male">Мужской</option>
+                                <option value="female">Женский</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Сохранить размеры</button>
+                    </form>
+                </div>
+            </div>
+
             <!-- Settings Section -->
             <div class="profile-section" id="section-settings">
                 <h2>Настройки профиля</h2>
@@ -179,9 +253,14 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script src="{% static 'js/mannequin-viewer.js' %}"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Navigation between sections
+    var profileMannequin = null;
+
+    // Navigation
     var navItems = document.querySelectorAll('.profile-nav-item');
     var sections = document.querySelectorAll('.profile-section');
 
@@ -202,109 +281,106 @@ document.addEventListener('DOMContentLoaded', function() {
                 targetSection.classList.add('active');
                 targetSection.style.display = 'block';
             }
+
+            if (sectionId === 'measurements' && !profileMannequin) {
+                initMannequin();
+                loadMeasurements();
+            }
         });
     });
 
-    // Show first section by default
+    // Show first section
     var firstSection = document.querySelector('.profile-section');
     if (firstSection) {
         firstSection.classList.add('active');
         firstSection.style.display = 'block';
     }
 
-    // Profile form submission
-    var profileForm = document.getElementById('profileForm');
-    if (profileForm) {
-        profileForm.addEventListener('submit', async function(e) {
+    function initMannequin() {
+        var container = document.getElementById('profile-mannequin-container');
+        if (container && typeof THREE !== 'undefined' && typeof MannequinViewer !== 'undefined') {
+            profileMannequin = new MannequinViewer('profile-mannequin-container', {
+                width: container.clientWidth || 400,
+                height: 400,
+                backgroundColor: 0x1a1a1a
+            });
+        }
+    }
+
+    async function loadMeasurements() {
+        try {
+            var response = await fetch('/api/measurements/');
+            if (response.ok) {
+                var data = await response.json();
+                updateForm(data);
+                if (profileMannequin) {
+                    profileMannequin.updateMeasurements({
+                        height: data.height || 170,
+                        chest: data.chest || 92,
+                        waist: data.waist || 76,
+                        hips: data.hips || 98,
+                        shoulders: data.shoulders || 116,
+                        armLength: data.arm_length || 58,
+                        legLength: data.leg_length || 80
+                    });
+                }
+            }
+        } catch (err) { console.log('Using defaults'); }
+    }
+
+    function updateForm(data) {
+        ['height', 'weight', 'chest', 'waist', 'hips', 'shoulders', 'arm_length', 'leg_length'].forEach(function(field) {
+            var input = document.getElementById(field);
+            if (input && data[field] !== undefined) input.value = data[field];
+        });
+        var genderSelect = document.getElementById('gender');
+        if (genderSelect && data.gender) genderSelect.value = data.gender;
+    }
+
+    function getCookie(name) {
+        var value = "; " + document.cookie;
+        var parts = value.split(";" + name + "=");
+        if (parts.length === 2) return parts.pop().split(";").shift();
+        return '';
+    }
+
+    function showToast(message) {
+        var toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        setTimeout(function() { toast.remove(); }, 3000);
+    }
+
+    // Measurements form
+    var measurementsForm = document.getElementById('measurementsForm');
+    if (measurementsForm) {
+        measurementsForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             var formData = new FormData(this);
             var data = Object.fromEntries(formData.entries());
-
             try {
-                var response = await fetch('/api/profile/update/', {
+                var response = await fetch('/api/measurements/update/', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                     body: JSON.stringify(data)
                 });
                 var result = await response.json();
                 if (result.success) {
-                    showToast('Профиль обновлён');
-                } else {
-                    showToast(result.error || 'Ошибка сохранения');
+                    showToast('Размеры сохранены');
+                    if (profileMannequin) {
+                        profileMannequin.updateMeasurements({
+                            height: data.height || 170,
+                            chest: data.chest || 92,
+                            waist: data.waist || 76,
+                            hips: data.hips || 98,
+                            shoulders: data.shoulders || 116,
+                            armLength: data.arm_length || 58,
+                            legLength: data.leg_length || 80
+                        });
+                    }
                 }
-            } catch (err) {
-                showToast('Ошибка сохранения');
-            }
-        });
-    }
-
-    // Password form submission
-    var passwordForm = document.getElementById('passwordForm');
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            var data = Object.fromEntries(formData.entries());
-
-            if (data.new_password !== data.confirm_password) {
-                showToast('Пароли не совпадают');
-                return;
-            }
-
-            try {
-                var response = await fetch('/api/profile/password/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify({
-                        old_password: data.old_password,
-                        new_password: data.new_password
-                    })
-                });
-                var result = await response.json();
-                if (result.success) {
-                    showToast('Пароль изменён');
-                    this.reset();
-                } else {
-                    showToast(result.error || 'Ошибка смены пароля');
-                }
-            } catch (err) {
-                showToast('Ошибка смены пароля');
-            }
-        });
-    }
-
-    // Payment form submission
-    var paymentForm = document.getElementById('paymentForm');
-    if (paymentForm) {
-        paymentForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            var data = Object.fromEntries(formData.entries());
-
-            try {
-                var response = await fetch('/api/profile/update/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: JSON.stringify(data)
-                });
-                var result = await response.json();
-                if (result.success) {
-                    showToast('Платёжные данные сохранены');
-                } else {
-                    showToast(result.error || 'Ошибка сохранения');
-                }
-            } catch (err) {
-                showToast('Ошибка сохранения');
-            }
+            } catch (err) { showToast('Ошибка'); }
         });
     }
 });

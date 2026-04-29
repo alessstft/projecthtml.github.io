@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .forms import LoginForm, RegisterForm
-from .models import Category, Product, Order, OrderItem, CartItem, Review, User
+from .models import Category, Product, Order, OrderItem, CartItem, Review, User, UserMeasurement
 
 
 def get_session_key(request):
@@ -608,6 +608,16 @@ def api_admin_update_category(request, category_id):
 
 @login_required
 @csrf_exempt
+def api_admin_delete_product(request, product_id):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    product = get_object_or_404(Product, pk=product_id)
+    product.delete()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_exempt
 def api_admin_delete_category(request, category_id):
     if request.user.role != 'admin':
         return JsonResponse({'error': 'Access denied'}, status=403)
@@ -616,11 +626,45 @@ def api_admin_delete_category(request, category_id):
     return JsonResponse({'success': True})
 
 
+# === User Measurements API ===
+
+def api_get_user_measurements(request):
+    """Получение измерений текущего пользователя"""
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Необходима авторизация'}, status=401)
+    try:
+        measurements = request.user.measurements
+        return JsonResponse(measurements.to_dict())
+    except UserMeasurement.DoesNotExist:
+        return JsonResponse({
+            'height': 170, 'chest': 92, 'waist': 76, 'hips': 98,
+            'shoulders': 116, 'arm_length': 58, 'leg_length': 80,
+            'shoe_size': 40, 'weight': 70, 'gender': 'neutral',
+        })
+
+
 @login_required
 @csrf_exempt
-def api_admin_delete_product(request, product_id):
-    if request.user.role != 'admin':
-        return JsonResponse({'error': 'Access denied'}, status=403)
-    product = get_object_or_404(Product, pk=product_id)
-    product.delete()
-    return JsonResponse({'success': True})
+def api_update_user_measurements(request):
+    """Обновление измерений пользователя"""
+    data = json_body(request)
+    defaults = {
+        'height': int(data.get('height', 170)),
+        'chest': int(data.get('chest', 92)),
+        'waist': int(data.get('waist', 76)),
+        'hips': int(data.get('hips', 98)),
+        'shoulders': int(data.get('shoulders', 116)),
+        'arm_length': int(data.get('arm_length', 58)),
+        'leg_length': int(data.get('leg_length', 80)),
+        'shoe_size': int(data.get('shoe_size', 40)),
+        'weight': int(data.get('weight', 70)),
+        'gender': data.get('gender', 'neutral'),
+    }
+    measurements, created = UserMeasurement.objects.get_or_create(
+        user=request.user, defaults=defaults
+    )
+    if not created:
+        for field, value in defaults.items():
+            setattr(measurements, field, value)
+        measurements.save()
+    return JsonResponse({'success': True, 'measurements': measurements.to_dict()})

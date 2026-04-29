@@ -252,3 +252,61 @@ class Review(models.Model):
             'text': self.text,
             'created_at': self.created_at.isoformat(),
         }
+
+
+class UserMeasurement(models.Model):
+    """Модель для хранения измерений пользователя (рост, обхваты и т.д.)"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='measurements')
+    height = models.IntegerField(default=170, help_text="Рост в см")
+    chest = models.IntegerField(default=92, help_text="Обхват груди в см")
+    waist = models.IntegerField(default=76, help_text="Обхват талии в см")
+    hips = models.IntegerField(default=98, help_text="Обхват бёдер в см")
+    shoulders = models.IntegerField(default=116, help_text="Ширина плеч в см")
+    arm_length = models.IntegerField(default=58, help_text="Длина руки в см")
+    leg_length = models.IntegerField(default=80, help_text="Длина ноги в см")
+    shoe_size = models.IntegerField(default=40, help_text="Размер обуви")
+    weight = models.IntegerField(default=70, help_text="Вес в кг")
+    gender = models.CharField(max_length=10, default='neutral', choices=[
+        ('male', 'Мужской'),
+        ('female', 'Женский'),
+        ('neutral', 'Универсальный'),
+    ])
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Измерения {self.user}'
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'height': self.height,
+            'chest': self.chest,
+            'waist': self.waist,
+            'hips': self.hips,
+            'shoulders': self.shoulders,
+            'arm_length': self.arm_length,
+            'leg_length': self.leg_length,
+            'shoe_size': self.shoe_size,
+            'weight': self.weight,
+            'gender': self.gender,
+        }
+
+    def suggest_size(self):
+        """Рекомендация размера на основе измерений"""
+        avg_measure = (self.chest + self.waist + self.hips) / 3
+        if self.height < 160:
+            if avg_measure < 85: return 'XS'
+            elif avg_measure < 95: return 'S'
+            elif avg_measure < 105: return 'M'
+            else: return 'L'
+        elif self.height < 175:
+            if avg_measure < 90: return 'S'
+            elif avg_measure < 100: return 'M'
+            elif avg_measure < 110: return 'L'
+            else: return 'XL'
+        else:
+            if avg_measure < 95: return 'M'
+            elif avg_measure < 105: return 'L'
+            elif avg_measure < 115: return 'XL'
+            else: return 'XXL'
