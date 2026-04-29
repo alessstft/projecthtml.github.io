@@ -1,10 +1,13 @@
 import json
+import os
+import uuid
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from .forms import LoginForm, RegisterForm
 from .models import Category, Product, Order, OrderItem, CartItem, Review, User
 
@@ -426,25 +429,82 @@ def api_current_user(request):
     return JsonResponse(None, safe=False)
 
 
+def save_uploaded_image(file):
+    """Save uploaded image and return the static path."""
+    if not file:
+        return 'images/placeholder.jpg'
+
+    # Get file extension
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+        ext = '.jpg'
+
+    # Generate unique filename
+    filename = f"{uuid.uuid4().hex}{ext}"
+    static_images_dir = os.path.join(settings.BASE_DIR, 'app', 'static', 'images')
+
+    # Create directory if not exists
+    os.makedirs(static_images_dir, exist_ok=True)
+
+    # Save file
+    filepath = os.path.join(static_images_dir, filename)
+    with open(filepath, 'wb+') as destination:
+        for chunk in file.chunks():
+            destination.write(chunk)
+
+    return f'images/{filename}'
+
+
+def parse_request_data(request):
+    """Parse JSON or FormData from request."""
+    if request.content_type and 'multipart/form-data' in request.content_type:
+        # Handle FormData
+        data = {
+            'name': request.POST.get('name', ''),
+            'sku': request.POST.get('sku', ''),
+            'price': request.POST.get('price', 0),
+            'old_price': request.POST.get('old_price') or None,
+            'category_id': request.POST.get('category_id') or None,
+            'description': request.POST.get('description', ''),
+            'sizes_in_stock': request.POST.get('sizes_in_stock', 'S:10,M:15,L:10,XL:5'),
+            'is_new': request.POST.get('is_new') in ['true', 'on', 'True'],
+            'is_popular': request.POST.get('is_popular') in ['true', 'on', 'True'],
+        }
+        return data, request.FILES.get('image')
+    else:
+        # Handle JSON
+        data = json_body(request)
+        return data, None
+
+
 @login_required
 @csrf_exempt
 def api_admin_create_product(request):
     if request.user.role != 'admin':
         return JsonResponse({'error': 'Access denied'}, status=403)
-    data = json_body(request)
+
+    data, image_file = parse_request_data(request)
+
+    # Handle image upload
+    if image_file:
+        image_path = save_uploaded_image(image_file)
+    else:
+        image_path = data.get('image', 'images/placeholder.jpg')
+
     category = None
     if data.get('category_id'):
         category = Category.objects.filter(pk=data['category_id']).first()
+
     product = Product.objects.create(
         name=data.get('name', ''),
-        sku=data.get('sku', ''),
-        price=data.get('price', 0),
-        old_price=data.get('old_price') or None,
+        sku=data.get('sku', '') or f'SKU-{uuid.uuid4().hex[:8]}',
+        price=int(data.get('price', 0) or 0),
+        old_price=int(data.get('old_price')) if data.get('old_price') else None,
         description=data.get('description', ''),
-        image=data.get('image', 'images/placeholder.jpg'),
+        image=image_path,
         category=category,
-        is_new=bool(data.get('is_new', False)),
-        is_popular=bool(data.get('is_popular', False)),
+        is_new=data.get('is_new', False),
+        is_popular=data.get('is_popular', False),
         sizes_in_stock=data.get('sizes_in_stock', 'S:10,M:15,L:10,XL:5'),
         colors=data.get('colors', ''),
     )
@@ -456,23 +516,103 @@ def api_admin_create_product(request):
 def api_admin_update_product(request, product_id):
     if request.user.role != 'admin':
         return JsonResponse({'error': 'Access denied'}, status=403)
-    data = json_body(request)
+
+    data, image_file = parse_request_data(request)
     product = get_object_or_404(Product, pk=product_id)
+
+    # Handle image upload
+    if image_file:
+        product.image = save_uploaded_image(image_file)
+
     if data.get('category_id'):
         product.category = Category.objects.filter(pk=data['category_id']).first()
+    else:
+        product.category = None
+
     product.name = data.get('name', product.name)
     product.sku = data.get('sku', product.sku)
-    product.price = data.get('price', product.price)
-    product.old_price = data.get('old_price', product.old_price)
+    product.price = int(data.get('price', product.price))
+    product.old_price = int(data['old_price']) if data.get('old_price') else None
     product.description = data.get('description', product.description)
-    product.image = data.get('image', product.image)
-    product.is_new = bool(data.get('is_new', product.is_new))
-    product.is_popular = bool(data.get('is_popular', product.is_popular))
+    product.is_new = data.get('is_new', product.is_new)
+    product.is_popular = data.get('is_popular', product.is_popular)
     if 'sizes_in_stock' in data:
         product.sizes_in_stock = data['sizes_in_stock']
     if 'colors' in data:
         product.colors = data['colors']
     product.save()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_exempt
+def api_admin_delete_product(request, product_id):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    product = get_object_or_404(Product, pk=product_id)
+    product.delete()
+    return JsonResponse({'success': True})
+
+
+# Category API
+@login_required
+@csrf_exempt
+def api_admin_create_category(request):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+
+    data = json_body(request)
+    name = data.get('name', '').strip()
+    slug = data.get('slug', '').strip()
+
+    if not name or not slug:
+        return JsonResponse({'success': False, 'error': 'Название и slug обязательны'}, status=400)
+
+    # Auto-generate slug if empty
+    if not slug:
+        from django.utils.text import slugify
+        slug = slugify(name)
+
+    if Category.objects.filter(slug=slug).exists():
+        return JsonResponse({'success': False, 'error': 'Категория с таким slug уже существует'}, status=400)
+
+    category = Category.objects.create(name=name, slug=slug)
+    return JsonResponse({'success': True, 'id': category.id})
+
+
+@login_required
+@csrf_exempt
+def api_admin_update_category(request, category_id):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+
+    data = json_body(request)
+    category = get_object_or_404(Category, pk=category_id)
+
+    name = data.get('name', '').strip()
+    slug = data.get('slug', '').strip()
+
+    if not name or not slug:
+        return JsonResponse({'success': False, 'error': 'Название и slug обязательны'}, status=400)
+
+    # Check for duplicate slug
+    existing = Category.objects.filter(slug=slug).exclude(pk=category_id).first()
+    if existing:
+        return JsonResponse({'success': False, 'error': 'Категория с таким slug уже существует'}, status=400)
+
+    category.name = name
+    category.slug = slug
+    category.save()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_exempt
+def api_admin_delete_category(request, category_id):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    category = get_object_or_404(Category, pk=category_id)
+    category.delete()
     return JsonResponse({'success': True})
 
 

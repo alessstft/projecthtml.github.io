@@ -79,10 +79,6 @@ python manage.py runserver
 
 ## Тестовые аккаунты
 
-**Администратор:**
-- Email: admin@fashionstore.ru
-- Пароль: admin123
-
 **Покупатель:** зарегистрируйтесь через форму регистрации
 
 ## Функционал
@@ -98,9 +94,3 @@ python manage.py runserver
 - Отзывы и рейтинги товаров
 - Админ-панель для управления заказами
 
-## Технологии
-
-- Flask 3.0
-- Flask-SQLAlchemy
-- Flask-Login
-- SQLite

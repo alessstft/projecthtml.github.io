@@ -35,6 +35,7 @@
     <div class="admin-tabs">
         <button class="admin-tab active" data-tab="orders">Заказы</button>
         <button class="admin-tab" data-tab="products">Товары</button>
+        <button class="admin-tab" data-tab="categories">Категории</button>
         <button class="admin-tab" data-tab="users">Пользователи</button>
     </div>
 
@@ -60,7 +61,7 @@
                     {% for order in orders %}
                     <tr data-order-id="{{ order.id }}">
                         <td>#{{ order.id }}</td>
-                        <td>{{ order.first_name }} {{ order.last_last|default:'' }}</td>
+                        <td>{{ order.first_name }} {{ order.last_name }}</td>
                         <td>{{ order.email }}</td>
                         <td><strong>{{ order.total }}₽</strong></td>
                         <td>
@@ -144,6 +145,45 @@
         </div>
     </div>
 
+    <!-- Categories Tab -->
+    <div class="admin-tab-content" id="tab-categories">
+        <div class="admin-section-header">
+            <h2>Управление категориями</h2>
+            <button class="btn btn-primary" id="addCategoryBtn">+ Добавить категорию</button>
+        </div>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Slug</th>
+                        <th>Товаров</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr data-category-id="{{ category.id }}">
+                        <td>#{{ category.id }}</td>
+                        <td>{{ category.name }}</td>
+                        <td><code>{{ category.slug }}</code></td>
+                        <td>{{ category.products.count }}</td>
+                        <td>
+                            <button class="btn btn-sm edit-category-btn" data-category="{{ category.id }}">Редактировать</button>
+                            <button class="btn btn-sm btn-danger delete-category-btn" data-category="{{ category.id }}">Удалить</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-cell">Нет категорий</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
     <!-- Users Tab -->
     <div class="admin-tab-content" id="tab-users">
         <div class="admin-section-header">
@@ -163,23 +203,23 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for user in users %}
+                    {% for user_item in users %}
                     <tr>
-                        <td>#{{ user.id }}</td>
-                        <td>{{ user.name|default:user.email }}</td>
-                        <td>{{ user.email }}</td>
+                        <td>#{{ user_item.id }}</td>
+                        <td>{{ user_item.name|default:user_item.email }}</td>
+                        <td>{{ user_item.email }}</td>
                         <td>
-                            {% if user.role == 'admin' %}
+                            {% if user_item.role == 'admin' %}
                             <span class="role-badge admin">Админ</span>
                             {% else %}
                             <span class="role-badge customer">Клиент</span>
                             {% endif %}
                         </td>
-                        <td>{{ user.bonus_balance }}₽</td>
+                        <td>{{ user_item.bonus_balance }}₽</td>
                         <td>
-                            <span class="bonus-level-badge {{ user.bonus_level }}">{{ user.get_bonus_level_display }}</span>
+                            <span class="bonus-level-badge {{ user_item.bonus_level }}">{{ user_item.get_bonus_level_display }}</span>
                         </td>
-                        <td>{{ user.date_joined|date:'d.m.Y' }}</td>
+                        <td>{{ user_item.date_joined|date:'d.m.Y' }}</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -201,20 +241,40 @@
     </div>
 </div>
 
-<!-- Add/Edit Product Modal -->
+<!-- Product Modal -->
 <div class="modal-overlay" id="productModalOverlay"></div>
 <div class="modal" id="productModal">
-    <div class="modal-inner">
+    <div class="modal-inner product-modal-content">
         <button class="modal-close" id="productModalClose">×</button>
         <h2 id="productModalTitle">Добавить товар</h2>
-        <form class="profile-form" id="productForm">
-            <div class="form-group">
-                <label for="productName">Название</label>
-                <input type="text" id="productName" name="name" required>
+        <form id="productForm">
+            <input type="hidden" id="productId" name="product_id" value="">
+
+            <div class="image-upload-area" id="imageUploadArea">
+                <input type="file" id="productImageFile" accept="image/*" style="display: none;">
+                <img id="imagePreview" src="" alt="" style="display: none;">
+                <div class="upload-placeholder" id="uploadPlaceholder">
+                    <span class="upload-icon">📷</span>
+                    <span>Нажмите для загрузки фото</span>
+                    <span class="upload-hint">или перетащите файл сюда</span>
+                </div>
             </div>
+            <p class="current-image-path" id="currentImagePath"></p>
+
             <div class="form-row">
                 <div class="form-group">
-                    <label for="productPrice">Цена</label>
+                    <label for="productName">Название *</label>
+                    <input type="text" id="productName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="productSku">Артикул *</label>
+                    <input type="text" id="productSku" name="sku" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="productPrice">Цена *</label>
                     <input type="number" id="productPrice" name="price" required>
                 </div>
                 <div class="form-group">
@@ -222,32 +282,67 @@
                     <input type="number" id="productOldPrice" name="old_price">
                 </div>
             </div>
+
             <div class="form-group">
                 <label for="productCategory">Категория</label>
-                <select id="productCategory" name="category_id">
-                    <option value="">Выберите категорию</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}">{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
+                <div class="category-with-add">
+                    <select id="productCategory" name="category_id">
+                        <option value="">Без категории</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat.id }}">{{ cat.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="button" class="btn btn-sm" id="newCategoryBtn">+ Новая</button>
+                </div>
             </div>
+
             <div class="form-group">
                 <label for="productDesc">Описание</label>
                 <textarea id="productDesc" name="description" rows="3"></textarea>
             </div>
+
             <div class="form-group">
-                <label for="productImage">Изображение (путь)</label>
-                <input type="text" id="productImage" name="image" placeholder="images/product.jpg">
+                <label for="productSizes">Размеры и остаток (формат: S:10,M:15,L:10,XL:5)</label>
+                <input type="text" id="productSizes" name="sizes_in_stock" placeholder="S:10,M:15,L:10,XL:5">
             </div>
+
             <div class="form-group">
                 <label>Опции</label>
-                <label class="checkbox-label">
-                    <input type="checkbox" name="is_new"> Новый товар
-                </label>
-                <label class="checkbox-label">
-                    <input type="checkbox" name="is_popular"> Популярный
-                </label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productIsNew" name="is_new"> Новый товар
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="productIsPopular" name="is_popular"> Популярный
+                    </label>
+                </div>
             </div>
+
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+</div>
+
+<!-- Category Modal -->
+<div class="modal-overlay" id="categoryModalOverlay"></div>
+<div class="modal" id="categoryModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="categoryModalClose">×</button>
+        <h2 id="categoryModalTitle">Добавить категорию</h2>
+        <form id="categoryForm">
+            <input type="hidden" id="categoryId" name="category_id" value="">
+
+            <div class="form-group">
+                <label for="categoryName">Название *</label>
+                <input type="text" id="categoryName" name="name" required>
+            </div>
+
+            <div class="form-group">
+                <label for="categorySlug">Slug (URL) *</label>
+                <input type="text" id="categorySlug" name="slug" required placeholder="hoodies, tshirts, etc.">
+                <span class="help-text">Только латинские буквы, цифры и дефисы</span>
+            </div>
+
             <button type="submit" class="btn btn-primary">Сохранить</button>
         </form>
     </div>
@@ -298,71 +393,150 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // View order
-    document.querySelectorAll('.view-order-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var orderId = this.dataset.order;
-            var modal = document.getElementById('orderModal');
-            var overlay = document.getElementById('orderModalOverlay');
-            var content = document.getElementById('orderModalContent');
+    // Image upload
+    var imageUploadArea = document.getElementById('imageUploadArea');
+    var imageInput = document.getElementById('productImageFile');
+    var imagePreview = document.getElementById('imagePreview');
+    var uploadPlaceholder = document.getElementById('uploadPlaceholder');
 
-            // Get order data from table row
-            var row = this.closest('tr');
-            var cells = row.cells;
+    if (imageUploadArea) {
+        imageUploadArea.addEventListener('click', function() {
+            imageInput.click();
+        });
 
-            content.innerHTML = '<h2>Заказ #' + orderId + '</h2><p>Загрузка...</p>';
-            modal.classList.add('is-open');
-            overlay.classList.add('is-open');
+        imageInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        imageUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--color-accent)';
+        });
+
+        imageUploadArea.addEventListener('dragleave', function() {
+            this.style.borderColor = 'var(--color-border)';
+        });
+
+        imageUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = 'var(--color-border)';
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                imageInput.files = e.dataTransfer.files;
+                var reader = new FileReader();
+                reader.onload = function(ev) {
+                    imagePreview.src = ev.target.result;
+                    imagePreview.style.display = 'block';
+                    uploadPlaceholder.style.display = 'none';
+                };
+                reader.readAsDataURL(e.dataTransfer.files[0]);
+            }
+        });
+    }
+
+    // Modal functions
+    function openModal(modalId, overlayId) {
+        var modal = document.getElementById(modalId);
+        var overlay = document.getElementById(overlayId);
+        if (modal) modal.classList.add('is-open');
+        if (overlay) overlay.classList.add('is-open');
+    }
+
+    function closeModal(modalId, overlayId) {
+        var modal = document.getElementById(modalId);
+        var overlay = document.getElementById(overlayId);
+        if (modal) modal.classList.remove('is-open');
+        if (overlay) overlay.classList.remove('is-open');
+    }
+
+    // Close modals on overlay click
+    ['orderModalOverlay', 'productModalOverlay', 'categoryModalOverlay'].forEach(function(id) {
+        document.getElementById(id)?.addEventListener('click', function() {
+            closeModal(id.replace('Overlay', ''), id);
         });
     });
 
-    // Close modals
-    document.getElementById('orderModalOverlay')?.addEventListener('click', function() {
-        document.getElementById('orderModal').classList.remove('is-open');
-        this.classList.remove('is-open');
-    });
-    document.getElementById('orderModalClose')?.addEventListener('click', function() {
-        document.getElementById('orderModal').classList.remove('is-open');
-        document.getElementById('orderModalOverlay').classList.remove('is-open');
-    });
-    document.getElementById('productModalOverlay')?.addEventListener('click', function() {
-        document.getElementById('productModal').classList.remove('is-open');
-        this.classList.remove('is-open');
-    });
-    document.getElementById('productModalClose')?.addEventListener('click', function() {
-        document.getElementById('productModal').classList.remove('is-open');
-        document.getElementById('productModalOverlay').classList.remove('is-open');
+    ['orderModalClose', 'productModalClose', 'categoryModalClose'].forEach(function(id) {
+        document.getElementById(id)?.addEventListener('click', function() {
+            var modalId = id.replace('Close', '');
+            closeModal(modalId, modalId + 'Overlay');
+        });
     });
 
     // Add product
     document.getElementById('addProductBtn')?.addEventListener('click', function() {
         document.getElementById('productModalTitle').textContent = 'Добавить товар';
         document.getElementById('productForm').reset();
-        document.getElementById('productModal').classList.add('is-open');
-        document.getElementById('productModalOverlay').classList.add('is-open');
+        document.getElementById('productId').value = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('uploadPlaceholder').style.display = 'flex';
+        document.getElementById('currentImagePath').textContent = '';
+        openModal('productModal', 'productModalOverlay');
     });
 
-    // Product form
+    // Edit product
+    document.querySelectorAll('.edit-product-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var productId = this.dataset.product;
+            var row = this.closest('tr');
+            var cells = row.cells;
+
+            document.getElementById('productModalTitle').textContent = 'Редактировать товар';
+            document.getElementById('productId').value = productId;
+            document.getElementById('productName').value = cells[2].textContent.trim();
+            document.getElementById('productPrice').value = cells[4].textContent.replace('₽', '').trim();
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadPlaceholder').style.display = 'flex';
+
+            openModal('productModal', 'productModalOverlay');
+        });
+    });
+
+    // Product form submit
     document.getElementById('productForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-        var formData = new FormData(this);
-        var data = Object.fromEntries(formData.entries());
-        data.is_new = formData.has('is_new');
-        data.is_popular = formData.has('is_popular');
+
+        var formData = new FormData();
+        formData.append('name', document.getElementById('productName').value);
+        formData.append('sku', document.getElementById('productSku').value || 'SKU' + Date.now());
+        formData.append('price', document.getElementById('productPrice').value);
+        formData.append('old_price', document.getElementById('productOldPrice').value || '');
+        formData.append('category_id', document.getElementById('productCategory').value);
+        formData.append('description', document.getElementById('productDesc').value);
+        formData.append('sizes_in_stock', document.getElementById('productSizes').value || 'S:10,M:15,L:10,XL:5');
+        formData.append('is_new', document.getElementById('productIsNew').checked);
+        formData.append('is_popular', document.getElementById('productIsPopular').checked);
+
+        var productId = document.getElementById('productId').value;
+        var imageFile = document.getElementById('productImageFile').files[0];
+        if (imageFile) {
+            formData.append('image', imageFile);
+        }
+
+        var url = productId ? '/api/admin/products/' + productId + '/' : '/api/admin/products/';
+        var method = productId ? 'PUT' : 'POST';
 
         try {
-            var response = await fetch('/api/admin/products/', {
-                method: 'POST',
+            var response = await fetch(url, {
+                method: method,
                 headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': getCookie('csrftoken')
                 },
-                body: JSON.stringify(data)
+                body: formData
             });
             var result = await response.json();
             if (result.success) {
-                showToast('Товар сохранён');
+                showToast(productId ? 'Товар обновлён' : 'Товар добавлен');
                 location.reload();
+            } else {
+                showToast(result.error || 'Ошибка сохранения');
             }
         } catch (err) {
             showToast('Ошибка сохранения');
@@ -379,13 +553,90 @@ document.addEventListener('DOMContentLoaded', function() {
                 var response = await fetch('/api/admin/products/' + productId + '/delete/', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
                         'X-CSRFToken': getCookie('csrftoken')
                     }
                 });
                 var result = await response.json();
                 if (result.success) {
                     showToast('Товар удалён');
+                    location.reload();
+                }
+            } catch (err) {
+                showToast('Ошибка удаления');
+            }
+        });
+    });
+
+    // Category modal
+    document.getElementById('addCategoryBtn')?.addEventListener('click', function() {
+        document.getElementById('categoryModalTitle').textContent = 'Добавить категорию';
+        document.getElementById('categoryForm').reset();
+        document.getElementById('categoryId').value = '';
+        openModal('categoryModal', 'categoryModalOverlay');
+    });
+
+    document.querySelectorAll('.edit-category-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var categoryId = this.dataset.category;
+            var row = this.closest('tr');
+            var cells = row.cells;
+
+            document.getElementById('categoryModalTitle').textContent = 'Редактировать категорию';
+            document.getElementById('categoryId').value = categoryId;
+            document.getElementById('categoryName').value = cells[1].textContent.trim();
+            document.getElementById('categorySlug').value = cells[2].textContent.trim();
+            openModal('categoryModal', 'categoryModalOverlay');
+        });
+    });
+
+    document.getElementById('categoryForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        var categoryId = document.getElementById('categoryId').value;
+        var data = {
+            name: document.getElementById('categoryName').value,
+            slug: document.getElementById('categorySlug').value
+        };
+
+        var url = categoryId ? '/api/admin/categories/' + categoryId + '/' : '/api/admin/categories/';
+        var method = categoryId ? 'PUT' : 'POST';
+
+        try {
+            var response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+            var result = await response.json();
+            if (result.success) {
+                showToast(categoryId ? 'Категория обновлена' : 'Категория добавлена');
+                location.reload();
+            } else {
+                showToast(result.error || 'Ошибка сохранения');
+            }
+        } catch (err) {
+            showToast('Ошибка сохранения');
+        }
+    });
+
+    document.querySelectorAll('.delete-category-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            if (!confirm('Удалить эту категорию?')) return;
+            var categoryId = this.dataset.category;
+
+            try {
+                var response = await fetch('/api/admin/categories/' + categoryId + '/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Категория удалена');
                     location.reload();
                 }
             } catch (err) {
