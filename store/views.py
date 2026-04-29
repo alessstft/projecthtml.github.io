@@ -92,7 +92,14 @@ def cart_page(request):
 def checkout_page(request):
     cart_items = get_cart_items(request)
     cart_total = sum(item.product.price * item.quantity for item in cart_items)
-    return render(request, 'checkout.html', {'cart_items': cart_items, 'cart_total': cart_total})
+    delivery_courier = 350 if cart_total < 3000 else 0
+    delivery_express = 550
+    return render(request, 'checkout.html', {
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+        'delivery_courier': delivery_courier,
+        'delivery_express': delivery_express,
+    })
 
 
 def order_success(request, order_id):
@@ -104,7 +111,28 @@ def order_success(request, order_id):
 def profile_view(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     total_spent = sum(o.total for o in orders if o.status not in ['cancelled', 'refunded'])
-    return render(request, 'profile.html', {'orders': orders, 'total_spent': total_spent})
+
+    # Calculate bonus progress
+    bonus_transactions = []
+    if total_spent < 5000:
+        bonus_progress = (total_spent / 5000) * 100
+        remaining_for_silver = 5000 - total_spent
+    elif total_spent < 15000:
+        bonus_progress = 100
+        remaining_for_gold = 15000 - total_spent
+    else:
+        bonus_progress = 100
+        remaining_for_silver = 0
+        remaining_for_gold = 0
+
+    return render(request, 'profile.html', {
+        'orders': orders,
+        'total_spent': total_spent,
+        'bonus_progress': bonus_progress if 'bonus_progress' in dir() else 0,
+        'remaining_for_silver': remaining_for_silver if 'remaining_for_silver' in dir() else 0,
+        'remaining_for_gold': remaining_for_gold if 'remaining_for_gold' in dir() else 0,
+        'bonus_transactions': bonus_transactions,
+    })
 
 
 def about(request):

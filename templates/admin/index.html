@@ -1,39 +1,398 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Админ панель — Fashion Store{% endblock %}
+{% block title %}Админ-панель — Fashion Store{% endblock %}
 
 {% block content %}
 <main class="container page-content">
     <h1>Админ-панель</h1>
-    <section class="dashboard-cards">
-        <div class="dashboard-card"><strong>Товары:</strong> {{ products.count }}</div>
-        <div class="dashboard-card"><strong>Заказы:</strong> {{ orders.count }}</div>
-        <div class="dashboard-card"><strong>Пользователи:</strong> {{ users.count }}</div>
-        <div class="dashboard-card"><strong>Категории:</strong> {{ categories.count }}</div>
-    </section>
-    <section class="orders-list">
-        <h2>Последние заказы</h2>
-        <table class="orders-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Клиент</th>
-                    <th>Сумма</th>
-                    <th>Статус</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for order in orders|slice:10 %}
-                <tr>
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.first_name }} {{ order.last_name }}</td>
-                    <td>{{ order.total }}₽</td>
-                    <td>{{ order.status }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
+
+    <!-- Stats Cards -->
+    <div class="admin-stats">
+        <div class="stat-card">
+            <span class="stat-icon">📦</span>
+            <span class="stat-value">{{ products.count }}</span>
+            <span class="stat-label">Товаров</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">🛒</span>
+            <span class="stat-value">{{ orders.count }}</span>
+            <span class="stat-label">Заказов</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">👥</span>
+            <span class="stat-value">{{ users.count }}</span>
+            <span class="stat-label">Пользователей</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-icon">💰</span>
+            <span class="stat-value">{{ total_revenue }}₽</span>
+            <span class="stat-label">Выручка</span>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="orders">Заказы</button>
+        <button class="admin-tab" data-tab="products">Товары</button>
+        <button class="admin-tab" data-tab="users">Пользователи</button>
+    </div>
+
+    <!-- Orders Tab -->
+    <div class="admin-tab-content active" id="tab-orders">
+        <div class="admin-section-header">
+            <h2>Управление заказами</h2>
+        </div>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Клиент</th>
+                        <th>Email</th>
+                        <th>Сумма</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr data-order-id="{{ order.id }}">
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.first_name }} {{ order.last_last|default:'' }}</td>
+                        <td>{{ order.email }}</td>
+                        <td><strong>{{ order.total }}₽</strong></td>
+                        <td>
+                            <select class="status-select" data-order="{{ order.id }}">
+                                <option value="new" {% if order.status == 'new' %}selected{% endif %}>Новый</option>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>В обработке</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Отправлен</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Доставлен</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Отменён</option>
+                            </select>
+                        </td>
+                        <td>{{ order.created_at|date:'d.m.Y H:i' }}</td>
+                        <td>
+                            <button class="btn btn-sm view-order-btn" data-order="{{ order.id }}">Подробнее</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-cell">Нет заказов</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Products Tab -->
+    <div class="admin-tab-content" id="tab-products">
+        <div class="admin-section-header">
+            <h2>Управление товарами</h2>
+            <button class="btn btn-primary" id="addProductBtn">+ Добавить товар</button>
+        </div>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Изображение</th>
+                        <th>Название</th>
+                        <th>Категория</th>
+                        <th>Цена</th>
+                        <th>В наличии</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr data-product-id="{{ product.id }}">
+                        <td>#{{ product.id }}</td>
+                        <td>
+                            {% if product.image %}
+                            <img src="{% static product.image %}" alt="{{ product.name }}" class="admin-product-img">
+                            {% else %}
+                            <span class="no-image">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.category.name|default:'—' }}</td>
+                        <td><strong>{{ product.price }}₽</strong></td>
+                        <td>
+                            {% if product.stock_total > 10 %}
+                            <span class="stock-badge in-stock">В наличии</span>
+                            {% elif product.stock_total > 0 %}
+                            <span class="stock-badge low-stock">Осталось {{ product.stock_total }}</span>
+                            {% else %}
+                            <span class="stock-badge out-stock">Нет</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-sm edit-product-btn" data-product="{{ product.id }}">Редактировать</button>
+                            <button class="btn btn-sm btn-danger delete-product-btn" data-product="{{ product.id }}">Удалить</button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-cell">Нет товаров</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Users Tab -->
+    <div class="admin-tab-content" id="tab-users">
+        <div class="admin-section-header">
+            <h2>Управление пользователями</h2>
+        </div>
+        <div class="admin-table-wrapper">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Имя</th>
+                        <th>Email</th>
+                        <th>Роль</th>
+                        <th>Бонусный баланс</th>
+                        <th>Уровень</th>
+                        <th>Дата регистрации</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>#{{ user.id }}</td>
+                        <td>{{ user.name|default:user.email }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.role == 'admin' %}
+                            <span class="role-badge admin">Админ</span>
+                            {% else %}
+                            <span class="role-badge customer">Клиент</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.bonus_balance }}₽</td>
+                        <td>
+                            <span class="bonus-level-badge {{ user.bonus_level }}">{{ user.get_bonus_level_display }}</span>
+                        </td>
+                        <td>{{ user.date_joined|date:'d.m.Y' }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="empty-cell">Нет пользователей</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
+
+<!-- Order Modal -->
+<div class="modal-overlay" id="orderModalOverlay"></div>
+<div class="modal" id="orderModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="orderModalClose">×</button>
+        <div id="orderModalContent"></div>
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div class="modal-overlay" id="productModalOverlay"></div>
+<div class="modal" id="productModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="productModalClose">×</button>
+        <h2 id="productModalTitle">Добавить товар</h2>
+        <form class="profile-form" id="productForm">
+            <div class="form-group">
+                <label for="productName">Название</label>
+                <input type="text" id="productName" name="name" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="productPrice">Цена</label>
+                    <input type="number" id="productPrice" name="price" required>
+                </div>
+                <div class="form-group">
+                    <label for="productOldPrice">Старая цена</label>
+                    <input type="number" id="productOldPrice" name="old_price">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="productCategory">Категория</label>
+                <select id="productCategory" name="category_id">
+                    <option value="">Выберите категорию</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="productDesc">Описание</label>
+                <textarea id="productDesc" name="description" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="productImage">Изображение (путь)</label>
+                <input type="text" id="productImage" name="image" placeholder="images/product.jpg">
+            </div>
+            <div class="form-group">
+                <label>Опции</label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_new"> Новый товар
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="is_popular"> Популярный
+                </label>
+            </div>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tabs
+    var tabs = document.querySelectorAll('.admin-tab');
+    var tabContents = document.querySelectorAll('.admin-tab-content');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function() {
+            var tabId = this.dataset.tab;
+
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            tabContents.forEach(function(c) { c.classList.remove('active'); });
+
+            this.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        });
+    });
+
+    // Order status change
+    document.querySelectorAll('.status-select').forEach(function(select) {
+        select.addEventListener('change', async function() {
+            var orderId = this.dataset.order;
+            var status = this.value;
+
+            try {
+                var response = await fetch('/api/admin/orders/' + orderId + '/status/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({ status: status })
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Статус обновлён');
+                }
+            } catch (err) {
+                showToast('Ошибка обновления статуса');
+            }
+        });
+    });
+
+    // View order
+    document.querySelectorAll('.view-order-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var orderId = this.dataset.order;
+            var modal = document.getElementById('orderModal');
+            var overlay = document.getElementById('orderModalOverlay');
+            var content = document.getElementById('orderModalContent');
+
+            // Get order data from table row
+            var row = this.closest('tr');
+            var cells = row.cells;
+
+            content.innerHTML = '<h2>Заказ #' + orderId + '</h2><p>Загрузка...</p>';
+            modal.classList.add('is-open');
+            overlay.classList.add('is-open');
+        });
+    });
+
+    // Close modals
+    document.getElementById('orderModalOverlay')?.addEventListener('click', function() {
+        document.getElementById('orderModal').classList.remove('is-open');
+        this.classList.remove('is-open');
+    });
+    document.getElementById('orderModalClose')?.addEventListener('click', function() {
+        document.getElementById('orderModal').classList.remove('is-open');
+        document.getElementById('orderModalOverlay').classList.remove('is-open');
+    });
+    document.getElementById('productModalOverlay')?.addEventListener('click', function() {
+        document.getElementById('productModal').classList.remove('is-open');
+        this.classList.remove('is-open');
+    });
+    document.getElementById('productModalClose')?.addEventListener('click', function() {
+        document.getElementById('productModal').classList.remove('is-open');
+        document.getElementById('productModalOverlay').classList.remove('is-open');
+    });
+
+    // Add product
+    document.getElementById('addProductBtn')?.addEventListener('click', function() {
+        document.getElementById('productModalTitle').textContent = 'Добавить товар';
+        document.getElementById('productForm').reset();
+        document.getElementById('productModal').classList.add('is-open');
+        document.getElementById('productModalOverlay').classList.add('is-open');
+    });
+
+    // Product form
+    document.getElementById('productForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var data = Object.fromEntries(formData.entries());
+        data.is_new = formData.has('is_new');
+        data.is_popular = formData.has('is_popular');
+
+        try {
+            var response = await fetch('/api/admin/products/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+            var result = await response.json();
+            if (result.success) {
+                showToast('Товар сохранён');
+                location.reload();
+            }
+        } catch (err) {
+            showToast('Ошибка сохранения');
+        }
+    });
+
+    // Delete product
+    document.querySelectorAll('.delete-product-btn').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            if (!confirm('Удалить этот товар?')) return;
+            var productId = this.dataset.product;
+
+            try {
+                var response = await fetch('/api/admin/products/' + productId + '/delete/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Товар удалён');
+                    location.reload();
+                }
+            } catch (err) {
+                showToast('Ошибка удаления');
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -6,70 +6,259 @@
 {% block content %}
 <main class="container page-content">
     <h1>Оформление заказа</h1>
+
     {% if cart_items %}
-    <form class="checkout-form" id="checkoutForm">
-        {% csrf_token %}
-        <div class="form-group">
-            <label>Имя</label>
-            <input type="text" name="first_name" value="{{ user.name }}" required>
+    <div class="checkout-layout">
+        <div class="checkout-form-section">
+            <form class="checkout-form" id="checkoutForm">
+                <div class="checkout-step active" data-step="1">
+                    <h2>Шаг 1: Контактные данные</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="first_name">Имя *</label>
+                            <input type="text" id="first_name" name="first_name" value="{{ user.name }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="last_name">Фамилия</label>
+                            <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" value="{{ user.email }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Телефон *</label>
+                            <input type="tel" id="phone" name="phone" value="{{ user.phone }}" placeholder="+7 (999) 123-45-67" required>
+                        </div>
+                    </div>
+                    <div class="step-buttons">
+                        <button type="button" class="btn btn-primary next-step">Далее →</button>
+                    </div>
+                </div>
+
+                <div class="checkout-step" data-step="2">
+                    <h2>Шаг 2: Доставка</h2>
+
+                    <div class="delivery-options">
+                        <label class="delivery-option selected">
+                            <input type="radio" name="delivery_type" value="courier" checked>
+                            <div class="delivery-info">
+                                <span class="delivery-name">Курьер</span>
+                                <span class="delivery-desc">Доставка до двери</span>
+                            </div>
+                            <span class="delivery-price">{{ delivery_courier }}₽</span>
+                        </label>
+
+                        <label class="delivery-option">
+                            <input type="radio" name="delivery_type" value="pickup">
+                            <div class="delivery-info">
+                                <span class="delivery-name">Самовывоз</span>
+                                <span class="delivery-desc">Из нашего склада</span>
+                            </div>
+                            <span class="delivery-price free">Бесплатно</span>
+                        </label>
+
+                        <label class="delivery-option">
+                            <input type="radio" name="delivery_type" value="express">
+                            <div class="delivery-info">
+                                <span class="delivery-name">Экспресс</span>
+                                <span class="delivery-desc">Доставка за 1-2 часа</span>
+                            </div>
+                            <span class="delivery-price">{{ delivery_express }}₽</span>
+                        </label>
+                    </div>
+
+                    <div class="address-fields">
+                        <div class="form-group">
+                            <label for="address">Адрес доставки</label>
+                            <textarea id="address" name="address" rows="3" placeholder="Город, улица, дом, квартира"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="step-buttons">
+                        <button type="button" class="btn prev-step">← Назад</button>
+                        <button type="button" class="btn btn-primary next-step">Далее →</button>
+                    </div>
+                </div>
+
+                <div class="checkout-step" data-step="3">
+                    <h2>Шаг 3: Оплата</h2>
+
+                    <div class="payment-options">
+                        <label class="payment-option selected">
+                            <input type="radio" name="payment_method" value="card" checked>
+                            <span class="payment-icon">💳</span>
+                            <span class="payment-name">Карта онлайн</span>
+                        </label>
+
+                        <label class="payment-option">
+                            <input type="radio" name="payment_method" value="receiving">
+                            <span class="payment-icon">💵</span>
+                            <span class="payment-name">При получении</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="comment">Комментарий к заказу</label>
+                        <textarea id="comment" name="comment" rows="3" placeholder="Дополнительные пожелания..."></textarea>
+                    </div>
+
+                    <div class="step-buttons">
+                        <button type="button" class="btn prev-step">← Назад</button>
+                        <button type="submit" class="btn btn-primary">Оформить заказ</button>
+                    </div>
+                </div>
+            </form>
         </div>
-        <div class="form-group">
-            <label>Фамилия</label>
-            <input type="text" name="last_name" value="{{ user.last_name }}">
-        </div>
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="email" value="{{ user.email }}" required>
-        </div>
-        <div class="form-group">
-            <label>Телефон</label>
-            <input type="text" name="phone" value="{{ user.phone }}">
-        </div>
-        <div class="form-group">
-            <label>Тип доставки</label>
-            <select name="delivery_type">
-                <option value="courier">Курьер</option>
-                <option value="pickup">Самовывоз</option>
-                <option value="express">Экспресс</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label>Адрес</label>
-            <textarea name="address"></textarea>
-        </div>
-        <div class="form-group">
-            <label>Комментарий</label>
-            <textarea name="comment"></textarea>
-        </div>
-        <div class="cart-summary">
-            <p>Товаров: {{ cart_items|length }}</p>
-            <p>Сумма: {{ cart_total }}₽</p>
-        </div>
-        <button class="btn btn-primary" type="submit">Оформить заказ</button>
-    </form>
+
+        <aside class="checkout-summary">
+            <div class="summary-card">
+                <h3>Ваш заказ</h3>
+
+                <div class="order-items">
+                    {% for item in cart_items %}
+                    <div class="order-item">
+                        <img src="{% static item.product.image %}" alt="{{ item.product.name }}" onerror="this.style.display='none'">
+                        <div class="order-item-info">
+                            <span class="order-item-name">{{ item.product.name }}</span>
+                            <span class="order-item-qty">{{ item.quantity }} шт. × {{ item.product.price }}₽</span>
+                        </div>
+                        <span class="order-item-price">{{ item.product.price }}₽</span>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="order-totals">
+                    <div class="total-row">
+                        <span>Товары:</span>
+                        <span>{{ cart_total }}₽</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Доставка:</span>
+                        <span id="summaryDelivery">350₽</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Итого:</span>
+                        <span id="summaryTotal">{{ cart_total|add:350 }}₽</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
     {% else %}
-    <p>Корзина пуста. Добавьте товары перед оформлением заказа.</p>
+    <div class="empty-cart">
+        <span class="empty-icon">🛒</span>
+        <h2>Корзина пуста</h2>
+        <p>Добавьте товары для оформления заказа</p>
+        <a href="{% url 'catalog' %}" class="btn btn-primary">В каталог</a>
+    </div>
     {% endif %}
 </main>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-document.getElementById('checkoutForm')?.addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-    const payload = Object.fromEntries(formData.entries());
-    const response = await fetch('{% url 'api_create_order' %}', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+document.addEventListener('DOMContentLoaded', function() {
+    var currentStep = 1;
+    var deliveryCost = {{ delivery_courier }};
+    var cartTotal = {{ cart_total }};
+    var freeDelivery = 3000;
+
+    // Delivery options
+    document.querySelectorAll('.delivery-option input').forEach(function(input) {
+        input.addEventListener('change', function() {
+            document.querySelectorAll('.delivery-option').forEach(function(opt) { opt.classList.remove('selected'); });
+            this.closest('.delivery-option').classList.add('selected');
+
+            var type = this.value;
+            if (type === 'pickup') {
+                deliveryCost = 0;
+            } else if (type === 'express') {
+                deliveryCost = {{ delivery_express }};
+            } else {
+                deliveryCost = {{ delivery_courier }};
+            }
+
+            updateTotals();
+        });
     });
-    const data = await response.json();
-    if (data.success) {
-        window.location.href = '{% url 'order_success' 0 %}'.replace('/0/', '/' + data.order_id + '/');
-    } else {
-        alert(data.error || 'Ошибка оформления заказа');
+
+    function updateTotals() {
+        var total = cartTotal + deliveryCost;
+        if (cartTotal >= freeDelivery) {
+            deliveryCost = 0;
+            total = cartTotal;
+        }
+
+        document.getElementById('summaryDelivery').textContent = deliveryCost === 0 ? 'Бесплатно' : deliveryCost + '₽';
+        document.getElementById('summaryTotal').textContent = total + '₽';
     }
+
+    // Steps navigation
+    document.querySelectorAll('.next-step').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var current = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
+            var inputs = current.querySelectorAll('input[required]');
+            var valid = true;
+            inputs.forEach(function(input) {
+                if (!input.value.trim()) {
+                    input.style.borderColor = '#ef4444';
+                    valid = false;
+                } else {
+                    input.style.borderColor = '';
+                }
+            });
+
+            if (!valid) return;
+
+            current.classList.remove('active');
+            currentStep++;
+            var next = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
+            if (next) {
+                next.classList.add('active');
+            }
+        });
+    });
+
+    document.querySelectorAll('.prev-step').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var current = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
+            current.classList.remove('active');
+            currentStep--;
+            var prev = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
+            if (prev) {
+                prev.classList.add('active');
+            }
+        });
+    });
+
+    // Form submit
+    document.getElementById('checkoutForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var data = Object.fromEntries(formData.entries());
+        data.delivery_cost = deliveryCost;
+
+        try {
+            var response = await fetch('/api/checkout/create/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+            var result = await response.json();
+            if (result.success) {
+                window.location.href = '/order-success/' + result.order_id + '/';
+            } else {
+                showToast(result.error || 'Ошибка оформления заказа');
+            }
+        } catch (err) {
+            showToast('Ошибка оформления заказа');
+        }
+    });
 });
 </script>
 {% endblock %}

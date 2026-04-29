@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Профиль — Fashion Store{% endblock %}
 
@@ -15,16 +16,17 @@
             </div>
 
             <nav class="profile-nav">
-                <a href="#" class="profile-nav-item active">📦 Мои заказы</a>
-                <a href="#" class="profile-nav-item">💰 Бонусы</a>
-                <a href="#" class="profile-nav-item">⚙️ Настройки</a>
+                <button class="profile-nav-item active" data-section="orders">📦 Мои заказы</button>
+                <button class="profile-nav-item" data-section="bonuses">💰 Бонусы</button>
+                <button class="profile-nav-item" data-section="settings">⚙️ Настройки</button>
             </nav>
 
             <a href="{% url 'logout' %}" class="btn btn-logout">Выйти</a>
         </aside>
 
         <section class="profile-content">
-            <div class="profile-section active">
+            <!-- Orders Section -->
+            <div class="profile-section active" id="section-orders">
                 <h2>Мои заказы</h2>
                 {% if orders %}
                 <div class="orders-list">
@@ -39,37 +41,272 @@
                         </div>
                         <div class="order-items-preview">
                             {% for item in order.items.all %}
-                            <img src="{{ item.product_image }}" alt="{{ item.product_name }}">
+                            <img src="{% static item.product_image %}" alt="{{ item.product_name }}" onerror="this.style.display='none'">
                             {% endfor %}
                         </div>
                         <div class="order-footer">
                             <span class="order-total">{{ order.total }}₽</span>
+                            <a href="{% url 'order_success' order.id %}" class="btn btn-sm">Подробнее</a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
                 <p style="margin-top: 20px;"><strong>Всего потрачено:</strong> {{ total_spent }}₽</p>
                 {% else %}
-                <p style="color: var(--color-text-muted); text-align: center; padding: 40px;">
-                    У вас пока нет заказов.
-                </p>
-                <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+                <div class="empty-section">
+                    <span class="empty-icon">📦</span>
+                    <p>У вас пока нет заказов.</p>
+                    <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
+                </div>
                 {% endif %}
             </div>
 
-            <div class="bonus-card">
-                <div class="bonus-balance-display">
-                    <div>
-                        <span style="color: var(--color-text-muted); font-size: 0.9rem;">Бонусный баланс</span>
-                        <span class="bonus-amount">{{ user.bonus_balance }}₽</span>
+            <!-- Bonuses Section -->
+            <div class="profile-section" id="section-bonuses">
+                <h2>Бонусная программа</h2>
+
+                <div class="bonus-card">
+                    <div class="bonus-header">
+                        <div>
+                            <span class="balance-label">Бонусный баланс</span>
+                            <span class="balance-value">{{ user.bonus_balance }} <span class="balance-unit">бонусов</span></span>
+                        </div>
+                        <span class="bonus-level-badge {{ user.bonus_level }}">{{ user.get_bonus_level_display }}</span>
                     </div>
-                    <span class="bonus-level {{ user.bonus_level }}">{{ user.get_bonus_level_display }}</span>
+
+                    <div class="bonus-progress">
+                        <p style="margin-bottom: 12px; color: var(--color-text-muted); font-size: 0.9rem;">
+                            До следующего уровня осталось:
+                        </p>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: {{ bonus_progress|default:0 }}%"></div>
+                        </div>
+                        {% if user.bonus_level == 'bronze' %}
+                        <p class="progress-hint">Накопите ещё {{ remaining_for_silver|default:5000 }}₽ для серебряного уровня</p>
+                        {% elif user.bonus_level == 'silver' %}
+                        <p class="progress-hint">Накопите ещё {{ remaining_for_gold|default:10000 }}₽ для золотого уровня</p>
+                        {% else %}
+                        <p class="progress-hint">Вы достигли максимального уровня!</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="bonus-levels">
+                        <div class="level-info {% if user.bonus_level == 'bronze' %}active{% endif %}">
+                            <span class="level-name">Бронзовый</span>
+                            <span class="level-cashback">3% кэшбэк</span>
+                        </div>
+                        <div class="level-info {% if user.bonus_level == 'silver' %}active{% endif %}">
+                            <span class="level-name">Серебряный</span>
+                            <span class="level-cashback">5% кэшбэк</span>
+                        </div>
+                        <div class="level-info {% if user.bonus_level == 'gold' %}active{% endif %}">
+                            <span class="level-name">Золотой</span>
+                            <span class="level-cashback">10% кэшбэк</span>
+                        </div>
+                    </div>
                 </div>
-                <p style="color: var(--color-text-muted); font-size: 0.9rem;">
-                    Кэшбэк начисляется после каждого заказа. Уровень лояльности повышается при накоплении определённой суммы.
-                </p>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="profile-section" id="section-settings">
+                <h2>Настройки профиля</h2>
+
+                <form class="profile-form" id="profileForm">
+                    <div class="form-group">
+                        <label for="name">Имя</label>
+                        <input type="text" id="name" name="name" value="{{ user.name }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Телефон</label>
+                        <input type="tel" id="phone" name="phone" value="{{ user.phone }}" placeholder="+7 (999) 123-45-67">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" value="{{ user.email }}" disabled>
+                        <span class="help-text">Email изменить нельзя</span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                </form>
+
+                <h3 style="margin: 40px 0 16px;">Смена пароля</h3>
+                <form class="profile-form" id="passwordForm">
+                    <div class="form-group">
+                        <label for="old_password">Текущий пароль</label>
+                        <input type="password" id="old_password" name="old_password" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password">Новый пароль</label>
+                        <input type="password" id="new_password" name="new_password" required minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Подтвердите пароль</label>
+                        <input type="password" id="confirm_password" name="confirm_password" required minlength="6">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Изменить пароль</button>
+                </form>
+
+                <h3 style="margin: 40px 0 16px;">Платёжные данные</h3>
+                <form class="profile-form" id="paymentForm">
+                    <div class="form-group">
+                        <label for="card_number">Номер карты</label>
+                        <input type="text" id="card_number" name="card_number" value="{{ user.card_number }}" placeholder="**** **** **** 1234" maxlength="19">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="card_holder">Имя владельца</label>
+                            <input type="text" id="card_holder" name="card_holder" value="{{ user.card_holder }}" placeholder="IVANOV IVAN">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="card_expiry">Срок</label>
+                            <input type="text" id="card_expiry" name="card_expiry" value="{{ user.card_expiry }}" placeholder="MM/YY" maxlength="5">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Сохранить карту</button>
+                </form>
             </div>
         </section>
     </div>
 </main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Navigation between sections
+    var navItems = document.querySelectorAll('.profile-nav-item');
+    var sections = document.querySelectorAll('.profile-section');
+
+    navItems.forEach(function(item) {
+        item.addEventListener('click', function() {
+            var sectionId = this.dataset.section;
+
+            navItems.forEach(function(n) { n.classList.remove('active'); });
+            this.classList.add('active');
+
+            sections.forEach(function(s) {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+
+            var targetSection = document.getElementById('section-' + sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+                targetSection.style.display = 'block';
+            }
+        });
+    });
+
+    // Show first section by default
+    var firstSection = document.querySelector('.profile-section');
+    if (firstSection) {
+        firstSection.classList.add('active');
+        firstSection.style.display = 'block';
+    }
+
+    // Profile form submission
+    var profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var data = Object.fromEntries(formData.entries());
+
+            try {
+                var response = await fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data)
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Профиль обновлён');
+                } else {
+                    showToast(result.error || 'Ошибка сохранения');
+                }
+            } catch (err) {
+                showToast('Ошибка сохранения');
+            }
+        });
+    }
+
+    // Password form submission
+    var passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var data = Object.fromEntries(formData.entries());
+
+            if (data.new_password !== data.confirm_password) {
+                showToast('Пароли не совпадают');
+                return;
+            }
+
+            try {
+                var response = await fetch('/api/profile/password/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        old_password: data.old_password,
+                        new_password: data.new_password
+                    })
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Пароль изменён');
+                    this.reset();
+                } else {
+                    showToast(result.error || 'Ошибка смены пароля');
+                }
+            } catch (err) {
+                showToast('Ошибка смены пароля');
+            }
+        });
+    }
+
+    // Payment form submission
+    var paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            var data = Object.fromEntries(formData.entries());
+
+            try {
+                var response = await fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data)
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Платёжные данные сохранены');
+                } else {
+                    showToast(result.error || 'Ошибка сохранения');
+                }
+            } catch (err) {
+                showToast('Ошибка сохранения');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
