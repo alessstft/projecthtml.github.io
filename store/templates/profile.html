@@ -29,6 +29,10 @@
                         <span class="nav-icon">📦</span>
                         Мои заказы
                     </a>
+                    <a href="{% url 'size' %}" class="profile-nav-link">
+                        <span class="nav-icon">👤</span>
+                        Мой размер
+                    </a>
                     <a href="#settings" class="profile-nav-link" data-tab="settings">
                         <span class="nav-icon">⚙️</span>
                         Настройки
@@ -203,13 +207,19 @@
 {% block extra_scripts %}
 <script>
 document.querySelectorAll('.profile-nav-link').forEach(link => {
+    if (!link.dataset.tab) {
+        return;
+    }
+
     link.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelectorAll('.profile-nav-link').forEach(l => l.classList.remove('active'));
         link.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         const target = link.dataset.tab;
-        document.getElementById(target).style.display = 'block';
+        if (target && document.getElementById(target)) {
+            document.getElementById(target).style.display = 'block';
+        }
     });
 });
 </script>

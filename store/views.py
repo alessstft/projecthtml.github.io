@@ -187,6 +187,15 @@ def bonus_view(request):
 
 
 @login_required(login_url='login')
+def size_view(request):
+    profile = get_customer_profile(request.user)
+    return render(request, 'size.html', {
+        'page': 'size',
+        'profile': profile,
+    })
+
+
+@login_required(login_url='login')
 @require_POST
 def checkout(request):
     try:
