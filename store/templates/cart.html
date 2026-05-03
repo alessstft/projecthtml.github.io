@@ -8,9 +8,51 @@
     <section class="cart-page">
         <h1>Корзина</h1>
         <div id="cartItems" class="cart-items-page"></div>
+
+        <div id="bonusPaymentBlock" class="bonus-payment-block" style="display:none">
+            <div class="bonus-payment-header">
+                <span class="bonus-payment-icon">⭐</span>
+                <h3>Оплата бонусами</h3>
+                <span class="bonus-payment-balance">Доступно: <strong id="availableBonusPoints">0</strong> баллов</span>
+            </div>
+            <div class="bonus-payment-body">
+                <label class="bonus-checkbox">
+                    <input type="checkbox" id="useBonusToggle">
+                    <span>Использовать бонусные баллы</span>
+                </label>
+                <div id="bonusSliderArea" class="bonus-slider-area" style="display:none">
+                    <div class="bonus-slider-row">
+                        <span class="bonus-slider-label">Списать баллов:</span>
+                        <div class="bonus-input-wrapper">
+                            <input type="number" id="bonusPointsInput" min="0" max="0" value="0">
+                            <span class="bonus-input-max">/ <span id="bonusMaxPoints">0</span></span>
+                        </div>
+                    </div>
+                    <div class="bonus-slider-row">
+                        <span class="bonus-slider-label">Скидка:</span>
+                        <span class="bonus-discount-value" id="bonusDiscountDisplay">0 ₽</span>
+                    </div>
+                    <div class="bonus-slider-info">
+                        1 балл = 1 ₽. Максимум 50% от суммы заказа.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="cart-page-footer">
             <div class="cart-total-page">
-                Итого: <span id="cartTotal">0₽</span>
+                <div class="cart-total-line">
+                    <span>Товары:</span>
+                    <span id="cartSubtotal">0 ₽</span>
+                </div>
+                <div class="cart-total-line bonus-discount-line" id="discountLine" style="display:none">
+                    <span>Скидка бонусами:</span>
+                    <span id="cartDiscount">0 ₽</span>
+                </div>
+                <div class="cart-total-final">
+                    <span>Итого:</span>
+                    <span id="cartTotal">0 ₽</span>
+                </div>
             </div>
             <button class="btn btn-primary btn-checkout-page" id="checkoutBtn">Заказать</button>
         </div>
@@ -19,5 +61,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+const USER_BONUS_POINTS = {{ user_bonus_points|default:0 }};
+const USER_IS_AUTH = {{ user_is_auth|yesno:"true,false" }};
+</script>
 <script src="{% static 'js/cart-page.js' %}"></script>
 {% endblock %}

@@ -219,13 +219,36 @@ def checkout(request):
         order.delete()
         return JsonResponse({'success': False, 'message': 'Нет доступных товаров в заказе'}, status=400)
 
-    order.total = total
-    order.save()
+    bonus_points = 0
+    paid_with_bonus = 0
+    if request.user.is_authenticated:
+        bonus_requested = int(payload.get('bonus_points', 0))
+        profile = get_customer_profile(request.user)
 
-    profile = get_customer_profile(request.user)
-    profile.total_spent += total
-    profile.bonus_points += total // 20
-    profile.save()
+        max_bonus = total // 2
+        allowed_bonus = min(bonus_requested, profile.bonus_points, max_bonus)
+
+        if allowed_bonus > 0:
+            bonus_points = allowed_bonus
+            profile.bonus_points -= bonus_points
+            profile.bonustransaction_set.create(
+                amount=-bonus_points,
+                description=f'Оплата заказа #{order.id}'
+            )
+            profile.save()
+
+        profile.total_spent += total
+        profile.bonus_points += total // 20
+        profile.bonustransaction_set.create(
+            amount=total // 20,
+            description=f'Кэшбэк за заказ #{order.id}'
+        )
+        profile.save()
+
+    paid_with_bonus = bonus_points
+    order.total = total
+    order.bonus_discount = paid_with_bonus
+    order.save()
 
     # Send email notification
     subject = f'Новый заказ #{order.id}'
@@ -233,7 +256,10 @@ def checkout(request):
     message += 'Товары:\n'
     for item in order.items.all():
         message += f'- {item.product.name} x{item.quantity} = {item.subtotal}₽\n'
-    message += f'\nИтого: {order.total}₽\n'
+    message += f'\nИтого: {total}₽\n'
+    if paid_with_bonus > 0:
+        message += f'Списано бонусов: -{paid_with_bonus}₽\n'
+        message += f'К оплате: {total - paid_with_bonus}₽\n'
     message += f'Дата: {order.created_at.strftime("%d.%m.%Y %H:%M")}'
 
     try:
@@ -252,7 +278,13 @@ def checkout(request):
 
 
 def cart(request):
+    bonus_points = 0
+    if request.user.is_authenticated:
+        profile = get_customer_profile(request.user)
+        bonus_points = profile.bonus_points
     return render(request, 'cart.html', {
         'products_json': get_products_json(),
         'page': 'cart',
+        'user_bonus_points': bonus_points,
+        'user_is_auth': request.user.is_authenticated,
     })

@@ -2,13 +2,35 @@ import os
 from pathlib import Path
 
 
+def load_env(path):
+    path = Path(path)
+    if path.exists():
+        with path.open(encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip()
+                if value and ((value[0] == value[-1]) and value[0] in "'\""):
+                    value = value[1:-1]
+                os.environ.setdefault(key, value)
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_env(BASE_DIR / '.env')
 
-SECRET_KEY = 'django-insecure-fashionstore-dev-key-change-in-production-2024'
 
-DEBUG = True
+def env(key, default=None):
+    return os.environ.get(key, default)
 
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1', 'testserver']
+
+SECRET_KEY = env('SECRET_KEY', 'django-insecure-fashionstore-dev-key-change-in-production-2024')
+
+DEBUG = env('DEBUG', 'True').lower() in ('1', 'true', 'yes')
+
+ALLOWED_HOSTS = [host.strip() for host in env('ALLOWED_HOSTS', '*,localhost,127.0.0.1,testserver').split(',') if host.strip()]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -70,9 +92,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email settings
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'marketolog.ichto@gmail.com'
+EMAIL_HOST = env('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(env('EMAIL_PORT', '587'))
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', 'True').lower() in ('1', 'true', 'yes')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', 'marketolog.ichto@gmail.com')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', '')
 
-DEFAULT_FROM_EMAIL = 'marketolog.ichto@gmail.com'
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', 'marketolog.ichto@gmail.com')
