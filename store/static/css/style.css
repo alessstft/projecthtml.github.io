@@ -1134,6 +1134,13 @@ aside h3 {
     background: rgba(255,255,255,0.12);
 }
 
+.cart-empty-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px;
+    margin-bottom: 30px;
+}
+
 @media (max-width: 900px) {
     .bonus-grid,
     .profile-summary-panel {

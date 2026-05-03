@@ -37,9 +37,9 @@ def get_customer_profile(user):
 def build_level_data(profile):
     thresholds = {
         CustomerProfile.LEVEL_BRONZE: 0,
-        CustomerProfile.LEVEL_SILVER: 5000,
-        CustomerProfile.LEVEL_GOLD: 10000,
-        CustomerProfile.LEVEL_PLATINUM: 20000,
+        CustomerProfile.LEVEL_SILVER: 10001,
+        CustomerProfile.LEVEL_GOLD: 30001,
+        CustomerProfile.LEVEL_PLATINUM: 100001,
     }
     current_level = profile.level
     next_level = None

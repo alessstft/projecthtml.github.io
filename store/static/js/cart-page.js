@@ -4,7 +4,7 @@ function renderCartPage() {
     if (!container || !totalEl) return;
 
     if (!cartState.items.length) {
-        container.innerHTML = '<p class="cart-empty">Ваша корзина пуста</p>';
+        container.innerHTML = '<p class="cart-empty">Ваша корзина пуста</p><div class="cart-empty-actions"><a href="/catalog/" class="btn btn-outline">Перейти в каталог</a></div>';
         totalEl.textContent = '0₽';
         return;
     }

@@ -43,11 +43,11 @@ class CustomerProfile(models.Model):
 
     @property
     def level(self):
-        if self.total_spent >= 20000:
+        if self.total_spent >= 100001:
             return self.LEVEL_PLATINUM
-        if self.total_spent >= 10000:
+        if self.total_spent >= 30001:
             return self.LEVEL_GOLD
-        if self.total_spent >= 5000:
+        if self.total_spent >= 10001:
             return self.LEVEL_SILVER
         return self.LEVEL_BRONZE
 
