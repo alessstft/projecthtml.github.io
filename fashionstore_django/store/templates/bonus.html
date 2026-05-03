@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои бонусы — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container bonus-page">
+    <section class="hero-panel">
+        <div class="hero-info">
+            <p class="eyebrow">Мои бонусы</p>
+            <h1>Уровень клиента и прогресс</h1>
+            <p class="hero-lead">Следите за своими бонусами, уровнем и прогрессом на пути к следующей награде.</p>
+        </div>
+        <div class="hero-actions">
+            <a href="{% url 'catalog' %}" class="btn btn-primary">Вернуться в каталог</a>
+        </div>
+    </section>
+
+    <section class="bonus-card">
+        <div class="bonus-grid">
+            <div class="bonus-summary">
+                <h2>Ваш текущий уровень</h2>
+                <div class="level-badge">{{ level_data.current_level_name }}</div>
+                <p class="bonus-value">{{ profile.bonus_points }} баллов</p>
+                <p class="bonus-text">Всего потрачено: {{ profile.total_spent }}₽</p>
+            </div>
+            <div class="bonus-progress">
+                <div class="progress-header">
+                    <div>
+                        <p class="progress-label">Прогресс до {{ level_data.next_level_name }}</p>
+                        {% if level_data.next_level %}
+                        <p class="progress-subtitle">Осталось {{ level_data.points_to_next }}₽ до следующего уровня</p>
+                        {% else %}
+                        <p class="progress-subtitle">Вы достигли максимального уровня</p>
+                        {% endif %}
+                    </div>
+                    <span class="progress-percent">{{ level_data.progress_percent }}%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-meter" style="width: {{ level_data.progress_percent }}%"></div>
+                </div>
+                <div class="progress-legend">
+                    <span>{{ level_data.current_threshold }}₽</span>
+                    <span>{{ level_data.next_threshold }}₽</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="bonus-levels">
+        <h2>Уровни клиентов</h2>
+        <div class="levels-grid">
+            <article class="level-card bronze">
+                <h3>Бронзовый</h3>
+                <p>0–4999 ₽</p>
+            </article>
+            <article class="level-card silver">
+                <h3>Серебряный</h3>
+                <p>5000–9999 ₽</p>
+            </article>
+            <article class="level-card gold">
+                <h3>Золотой</h3>
+                <p>10000–19999 ₽</p>
+            </article>
+            <article class="level-card platinum">
+                <h3>Платиновый</h3>
+                <p>20000 ₽ и выше</p>
+            </article>
+        </div>
+    </section>
+</main>
+{% endblock %}

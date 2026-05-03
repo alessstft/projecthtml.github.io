@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Корзина — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container">
+    <section class="cart-page">
+        <h1>Корзина</h1>
+        <div id="cartItems" class="cart-items-page"></div>
+        <div class="cart-page-footer">
+            <div class="cart-total-page">
+                Итого: <span id="cartTotal">0₽</span>
+            </div>
+            <button class="btn btn-primary btn-checkout-page" id="checkoutBtn">Заказать</button>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/cart-page.js' %}"></script>
+{% endblock %}

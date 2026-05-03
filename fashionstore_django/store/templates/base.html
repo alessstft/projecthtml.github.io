@@ -1,0 +1,114 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fashion Store — Магазин одежды{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+</head>
+<body>
+<header class="header">
+    <div class="container header-flex">
+        <a href="{% url 'index' %}" class="logo">Fashion Store</a>
+        <nav class="nav">
+            <a href="{% url 'index' %}" {% if page == 'home' %}class="active"{% endif %}>Главная</a>
+            <a href="{% url 'catalog' %}" {% if page == 'catalog' %}class="active"{% endif %}>Каталог</a>
+            <a href="{% url 'about' %}" {% if page == 'about' %}class="active"{% endif %}>О нас</a>
+            <a href="{% url 'contacts' %}" {% if page == 'contacts' %}class="active"{% endif %}>Контакты</a>
+        </nav>
+
+        <form class="search-form" action="{% url 'catalog' %}" method="get">
+            <input type="text" name="search" placeholder="Поиск товаров...">
+            <button type="submit">Поиск</button>
+        </form>
+
+        <div class="header-actions">
+            <a href="/cart/" class="cart-link" title="Корзина">
+                <span class="cart-icon">🛒</span>
+                <span class="cart-count">0</span>
+            </a>
+            {% if request.user.is_authenticated %}
+            <a href="{% url 'profile' %}" class="profile-link" title="Профиль">{{ request.user.username }}</a>
+            <a href="{% url 'logout' %}" class="profile-link">Выйти</a>
+            {% else %}
+            <a href="{% url 'login' %}" class="profile-link">Войти</a>
+            <a href="{% url 'register' %}" class="profile-link">Регистрация</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+{% block content %}{% endblock %}
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Fashion Store</h4>
+                <p>Актуальная мода по доступным ценам</p>
+            </div>
+            <div class="footer-col">
+                <h4>Каталог</h4>
+                <a href="{% url 'catalog' %}?cat=hoodies">Худи</a>
+                <a href="{% url 'catalog' %}?cat=tshirts">Футбилки</a>
+                <a href="{% url 'catalog' %}?cat=shirts">Рубашки</a>
+            </div>
+            <div class="footer-col">
+                <h4>Информация</h4>
+                <a href="{% url 'about' %}">О нас</a>
+                <a href="{% url 'contacts' %}">Контакты</a>
+                {% if page == 'home' %}<a href="#">Доставка и оплата</a>{% endif %}
+            </div>
+            <div class="footer-col">
+                <h4>Контакты</h4>
+                <p>+7 (999) 123-45-67</p>
+                <p>info@fashionstore.ru</p>
+            </div>
+        </div>
+        {% if page == 'about' %}
+        <div class="footer-bottom">
+            <p>&copy; Fashion Store</p>
+        </div>
+        {% endif %}
+    </div>
+</footer>
+
+<div class="modal-overlay" id="productModalOverlay"></div>
+<div class="modal" id="productModal">
+    <div class="modal-inner">
+        <button class="modal-close" id="productModalClose" aria-label="Закрыть">×</button>
+        <div class="modal-content">
+            <div class="modal-image">
+                <img src="" alt="" id="modalProductImage">
+            </div>
+            <div class="modal-info">
+                <h2 id="modalProductTitle"></h2>
+                <p class="modal-subtitle">
+                    <span id="modalProductCategory"></span> · Артикул: <span id="modalProductSku"></span>
+                </p>
+                <p class="modal-price" id="modalProductPrice"></p>
+                <p class="modal-desc" id="modalProductDesc"></p>
+                <button class="btn btn-primary btn-add-cart-product" id="modalAddToCart">Добавить в корзину</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const USER_AUTHENTICATED = {{ request.user.is_authenticated|yesno:"true,false" }};
+const LOGIN_URL = "{% url 'login' %}";
+</script>
+{% if products_json %}
+<script>
+const PRODUCTS = {{ products_json|safe }};
+function getProductById(id) {
+    return PRODUCTS.find(p => p.id === String(id));
+}
+</script>
+{% endif %}
+<script src="{% static 'js/main.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

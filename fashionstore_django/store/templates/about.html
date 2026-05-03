@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}О нас - Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container">
+    <section class="page-content about-page">
+        <h1>О нашем магазине</h1>
+        <p class="lead">Fashion Store — это магазин современной одежды, где каждый найдёт что-то для себя.</p>
+
+        <div class="about-grid">
+            <div class="about-block">
+                <h2>Наша история</h2>
+                <p>Fashion Store — это магазин современной одежды, где каждый найдёт что-то для себя.</p>
+            </div>
+            <div class="about-block">
+                <h2>Наша миссия</h2>
+                <p>Сделать моду доступной без компромиссов в качестве. Мы тщательно отбираем каждую вещь в нашем ассортименте, работаем с проверенными производителями и следим за актуальными трендами.</p>
+            </div>
+        </div>
+
+        <div class="values">
+            <h2>Наши ценности</h2>
+            <div class="values-grid">
+                <div class="value-card">
+                    <span class="value-icon">✨</span>
+                    <h3>Качество</h3>
+                    <p>Только качественные материалы и надёжное производство</p>
+                </div>
+                <div class="value-card">
+                    <span class="value-icon">💰</span>
+                    <h3>Доступные цены</h3>
+                    <p>Честные цены без завышенных наценок</p>
+                </div>
+                <div class="value-card">
+                    <span class="value-icon">🌍</span>
+                    <h3>Экологичность</h3>
+                    <p>Забота об окружающей среде — наш приоритет</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span class="stat-number">5000+</span>
+                <span class="stat-label">Довольных клиентов</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Позиций в каталоге</span>
+            </div>
+            <div class="stat">
+                <span class="stat-number">100%</span>
+                <span class="stat-label">Гарантия качества</span>
+            </div>
+        </div>
+    </section>
+</main>
+{% endblock %}

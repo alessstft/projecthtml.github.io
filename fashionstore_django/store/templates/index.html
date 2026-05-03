@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Fashion Store — Магазин одежды{% endblock %}
+
+{% block content %}
+<div class="promo">
+    <div class="promo-track">
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+        <span>•</span>
+        <span>Скидки до 50%</span>
+    </div>
+</div>
+
+<main class="container">
+    <section class="hero">
+        <h1>Добро пожаловать в Fashion Store</h1>
+        <p>Актуальная одежда по доступным ценам. Худи, футболки, рубашки и многое другое.</p>
+    </section>
+
+    <section class="categories">
+        <h2>Категории</h2>
+        <div class="categories-grid">
+            <a href="{% url 'catalog' %}?cat=hoodies" class="category-card">
+                <div class="category-img">Худи</div>
+                <span>Худи и свитшоты</span>
+            </a>
+            <a href="{% url 'catalog' %}?cat=tshirts" class="category-card">
+                <div class="category-img">Футболки</div>
+                <span>Футболки и топы</span>
+            </a>
+            <a href="{% url 'catalog' %}?cat=shirts" class="category-card">
+                <div class="category-img">Рубашки</div>
+                <span>Рубашки</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <h2>Популярные товары</h2>
+        <div class="products" id="popularProducts">
+        </div>
+        <a href="{% url 'catalog' %}" class="btn btn-primary">Смотреть весь каталог</a>
+    </section>
+
+    <section class="features">
+        <div class="feature">
+            <span class="feature-icon">🚚</span>
+            <h3>Бесплатная доставка</h3>
+            <p>При заказе от 3000₽</p>
+        </div>
+        <div class="feature">
+            <span class="feature-icon">↩️</span>
+            <h3>Возврат 14 дней</h3>
+            <p>Без вопросов</p>
+        </div>
+        <div class="feature">
+            <span class="feature-icon">🔒</span>
+            <h3>Безопасная оплата</h3>
+            <p>Защищённые платежи</p>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/shop.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const popular = PRODUCTS.filter(p => p.isPopular);
+    renderProductList('#popularProducts', popular);
+});
+</script>
+{% endblock %}

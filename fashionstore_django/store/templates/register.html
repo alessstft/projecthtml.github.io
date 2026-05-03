@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container auth-page">
+    <section class="auth-card">
+        <h1>Регистрация</h1>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <input type="hidden" name="next" value="{{ next }}">
+            <button type="submit" class="btn btn-primary">Зарегистрироваться</button>
+        </form>
+        <p>Уже есть аккаунт? <a href="{% url 'login' %}?next={{ next|urlencode }}">Войти</a></p>
+    </section>
+</main>
+{% endblock %}

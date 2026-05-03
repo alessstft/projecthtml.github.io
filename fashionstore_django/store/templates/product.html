@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<main class="container">
+    <div class="product-page" id="productContainer">
+        <div class="breadcrumbs">
+            <a href="{% url 'index' %}">Главная</a> / <a href="{% url 'catalog' %}">Каталог</a> / <span id="productBreadcrumb">Товар</span>
+        </div>
+        <div class="product-detail">
+            <div class="product-gallery">
+                <img src="{% static 'images/худи.jpg' %}" alt="Товар" id="productImage">
+            </div>
+            <div class="product-info">
+                <h1 id="productTitle">Худи Oversize Black</h1>
+                <p class="product-category" id="productCategory">Худи</p>
+                <p class="product-price">
+                    <span class="old-price" id="productOldPrice"></span>
+                    <span class="price" id="productPrice">3490₽</span>
+                </p>
+                <p class="product-desc" id="productDesc">
+                    Качественное худи оверсайз из плотного хлопка. Удобный крой, капюшон с верёвками. Идеально для повседневной носки.
+                </p>
+                <div class="product-size">
+                    <label>Размер:</label>
+                    <select id="productSize">
+                        <option value="S">S</option>
+                        <option value="M" selected>M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                    </select>
+                </div>
+                <div class="product-actions">
+                    <button class="btn btn-primary btn-add-cart-product" id="addToCartBtn" data-id="{{ product_id }}">Добавить в корзину</button>
+                </div>
+                <div class="product-features">
+                    <p>🚚 Бесплатная доставка от 3000₽</p>
+                    <p>↩️ Возврат в течение 14 дней</p>
+                    <p>🔒 Безопасная оплата</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/product.js' %}"></script>
+{% endblock %}

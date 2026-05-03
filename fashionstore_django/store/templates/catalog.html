@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Каталог — Fashion Store{% endblock %}
+
+{% block content %}
+<main class="container">
+    <section class="catalog-header">
+        <h1>Каталог</h1>
+        <div class="catalog-filters">
+            <select class="filter-select" id="categoryFilter">
+                <option value="">Все категории</option>
+                <option value="hoodies">Худи</option>
+                <option value="tshirts">Футболки</option>
+                <option value="shirts">Рубашки</option>
+            </select>
+            <select class="filter-select" id="sortFilter">
+                <option value="popular">По популярности</option>
+                <option value="price-asc">Сначала дешевле</option>
+                <option value="price-desc">Сначала дороже</option>
+                <option value="new">Новинки</option>
+            </select>
+        </div>
+    </section>
+
+    <div class="catalog-layout">
+        <aside class="sidebar">
+            <h3>Цена</h3>
+            <div class="price-range">
+                <input type="number" placeholder="От" id="priceMin" min="0">
+                <span>—</span>
+                <input type="number" placeholder="До" id="priceMax">
+                <button class="btn btn-sm" id="applyPrice">Применить</button>
+            </div>
+        </aside>
+
+        <section class="products catalog-products" id="catalogProducts">
+        </section>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/shop.js' %}"></script>
+<script src="{% static 'js/catalog.js' %}"></script>
+{% endblock %}
