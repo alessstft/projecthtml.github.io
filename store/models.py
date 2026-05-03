@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
+from django.conf import settings
+from django.core.mail import send_mail
 
 
 class CustomUserManager(UserManager):
@@ -36,6 +38,8 @@ class User(AbstractUser):
         ('gold', 'Золотой'),
     ]
     bonus_level = models.CharField(max_length=20, default='bronze', choices=BONUS_LEVELS)
+    bonus_level_updated_at = models.DateTimeField(null=True, blank=True)
+    total_spent_cached = models.IntegerField(default=0)
     payment_method = models.CharField(max_length=50, default='card')
     card_number = models.CharField(max_length=19, blank=True)
     card_holder = models.CharField(max_length=100, blank=True)
@@ -48,6 +52,35 @@ class User(AbstractUser):
     def __str__(self):
         return self.name or self.email
 
+    def get_bonus_level_display(self):
+        return dict(self.BONUS_LEVELS).get(self.bonus_level, self.bonus_level)
+
+    def update_bonus_level(self):
+        """Автоматическое обновление уровня на основе total_spent"""
+        from django.utils import timezone
+        total = self.total_spent_cached or 0
+        old_level = self.bonus_level
+        if total >= 15000:
+            new_level = 'gold'
+        elif total >= 5000:
+            new_level = 'silver'
+        else:
+            new_level = 'bronze'
+        if old_level != new_level:
+            self.bonus_level = new_level
+            self.bonus_level_updated_at = timezone.now()
+            self.save(update_fields=['bonus_level', 'bonus_level_updated_at'])
+        return old_level != new_level
+
+    def recalc_total_spent(self):
+        """Пересчёт total_spent на основе доставленных заказов"""
+        total = sum(
+            o.total for o in Order.objects.filter(user=self, status='delivered')
+        )
+        self.total_spent_cached = int(total)
+        self.save(update_fields=['total_spent_cached'])
+        return self.total_spent_cached
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -55,6 +88,8 @@ class User(AbstractUser):
             'email': self.email,
             'bonus_balance': self.bonus_balance,
             'bonus_level': self.bonus_level,
+            'bonus_level_display': self.get_bonus_level_display(),
+            'total_spent': self.total_spent_cached,
             'role': self.role,
         }
 
@@ -150,7 +185,8 @@ class Order(models.Model):
     last_name = models.CharField(max_length=100, blank=True)
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True)
-    delivery_type = models.CharField(max_length=50, blank=True)
+    delivery_type = models.CharField(max_length=50, blank=True, default='courier')
+    payment_method = models.CharField(max_length=50, blank=True, default='card', choices=[('card', 'Карта онлайн'), ('receiving', 'При получении')])
     address = models.TextField(blank=True)
     comment = models.TextField(blank=True)
     bonus_used = models.IntegerField(default=0)
@@ -163,14 +199,205 @@ class Order(models.Model):
         ('shipped', 'Отправлен'),
         ('delivered', 'Доставлен'),
         ('cancelled', 'Отменён'),
+        ('refunded', 'Возврат'),
     ]
     status = models.CharField(max_length=50, default='new', choices=STATUS_CHOICES)
+    status_updated_at = models.DateTimeField(auto_now=True)
+    notes = models.TextField(blank=True, help_text="Причина отмены/возврата и т.д.")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f'Заказ #{self.id} - {self.first_name}'
 
-    def to_dict(self):
+    def save(self, *args, **kwargs):
+        old_status = None
+        if self.pk:
+            old_status = Order.objects.filter(pk=self.pk).values_list('status', flat=True).first()
+        super().save(*args, **kwargs)
+        # При смене статуса на "доставлен" — начисляем кэшбэк и обновляем уровень
+        if old_status and old_status != 'delivered' and self.status == 'delivered':
+            if self.user:
+                self.user.recalc_total_spent()
+                self.user.update_bonus_level()
+                # Кэшбэк
+                cashback_percent = {'bronze': 3, 'silver': 5, 'gold': 10}.get(self.user.bonus_level, 3)
+                cashback = int(self.total * cashback_percent / 100)
+                if cashback > 0:
+                    self.user.bonus_balance += cashback
+                    self.user.save(update_fields=['bonus_balance'])
+                    BonusTransaction.objects.create(
+                        user=self.user,
+                        amount=cashback,
+                        transaction_type='cashback',
+                        order=self,
+                        balance_after=self.user.bonus_balance,
+                        description=f'Кэшбэк за заказ #{self.id}'
+                    )
+        # При отмене/возврате — возврат списанных бонусов
+        if old_status and old_status != self.status and self.status in ['cancelled', 'refunded']:
+            if self.user and self.bonus_used > 0:
+                self.user.bonus_balance += self.bonus_used
+                self.user.save(update_fields=['bonus_balance'])
+                BonusTransaction.objects.create(
+                    user=self.user,
+                    amount=self.bonus_used,
+                    transaction_type='refund',
+                    order=self,
+                    balance_after=self.user.bonus_balance,
+                    description=f'Возврат бонусов за отменённый заказ #{self.id}'
+                )
+        
+        # Отправка уведомления при изменении статуса
+        if old_status and old_status != self.status:
+            self.send_notification()
+
+    def send_notification(self):
+        """Отправка уведомления о заказе клиенту и менеджеру"""
+        manager_email = 'Marketolog.icht@gmail.com'
+        
+        items_text = '\n'.join([
+            f'- {item.product_name} x{item.quantity} = {item.price * item.quantity}₽'
+            for item in self.items.all()
+        ])
+        
+        # Письмо менеджеру (всегда)
+        subject_manager = f'Новый заказ #{self.id} — {self.get_status_display()}'
+        payment_display = self.get_payment_method_display() if hasattr(self, 'get_payment_method_display') else self.payment_method
+        delivery_display = self.get_delivery_type_display() if hasattr(self, 'get_delivery_type_display') else self.delivery_type
+        message_manager = f"""
+Поступил новый заказ #{self.id}!
+
+Клиент: {self.first_name} {self.last_name}
+Email: {self.email or 'Не указан'}
+Телефон: {self.phone or 'Не указан'}
+Статус: {self.get_status_display()}
+
+Товары:
+{items_text}
+
+Подытог: {self.subtotal}₽
+Доставка: {self.delivery_cost}₽ ({delivery_display})
+Способ оплаты: {payment_display}
+Итого: {self.total}₽
+
+Комментарий: {self.comment or 'Нет'}
+
+Fashion Store
+"""
+        try:
+            send_mail(
+                subject_manager,
+                message_manager,
+                settings.DEFAULT_FROM_EMAIL,
+                [manager_email],
+                fail_silently=True,
+            )
+        except Exception:
+            pass
+        
+        # Письмо клиенту (только если есть email)
+        if self.email:
+            subject_client = f'Ваш заказ #{self.id} — {self.get_status_display()}'
+            message_client = f"""
+Здравствуйте, {self.first_name}!
+
+Ваш заказ #{self.id} успешно оформлен.
+Статус: {self.get_status_display()}
+
+Товары:
+{items_text}
+
+Подытог: {self.subtotal}₽
+Доставка: {self.delivery_cost}₽
+Бонусов списано: {self.bonus_used}
+Итого: {self.total}₽
+
+Спасибо за покупку!
+Fashion Store
+"""
+            try:
+                send_mail(
+                    subject_client,
+                    message_client,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [self.email],
+                    fail_silently=True,
+                )
+                return True
+            except Exception:
+                return False
+        return True
+        
+        # Email для менеджера
+        manager_email = 'Marketolog.icht@gmail.com'
+        
+        items_text = '\n'.join([
+            f'- {item.product_name} x{item.quantity} = {item.price * item.quantity}₽'
+            for item in self.items.all()
+        ])
+        
+        # Письмо клиенту
+        subject_client = f'Ваш заказ #{self.id} — {self.get_status_display()}'
+        message_client = f"""
+Здравствуйте, {self.first_name}!
+
+Ваш заказ #{self.id} обновлён.
+Статус: {self.get_status_display()}
+
+Товары:
+{items_text}
+
+Подытог: {self.subtotal}₽
+Доставка: {self.delivery_cost}₽
+Бонусов списано: {self.bonus_used}
+Итого: {self.total}₽
+
+Спасибо за покупку!
+Fashion Store
+"""
+        # Письмо менеджеру
+        subject_manager = f'Новый заказ #{self.id} — {self.get_status_display()}'
+        payment_display = self.get_payment_method_display() if hasattr(self, 'get_payment_method_display') else self.payment_method
+        message_manager = f"""
+Поступил новый заказ #{self.id}!
+
+Клиент: {self.first_name} {self.last_name}
+Email: {self.email}
+Телефон: {self.phone}
+Статус: {self.get_status_display()}
+
+Товары:
+{items_text}
+
+Подытог: {self.subtotal}₽
+Доставка: {self.delivery_cost}₽ ({self.get_delivery_type_display() if hasattr(self, 'get_delivery_type_display') else self.delivery_type})
+Способ оплаты: {payment_display}
+Итого: {self.total}₽
+
+Комментарий: {self.comment or 'Нет'}
+
+Fashion Store
+"""
+        try:
+            # Письмо клиенту
+            send_mail(
+                subject_client,
+                message_client,
+                settings.DEFAULT_FROM_EMAIL,
+                [self.email],
+                fail_silently=True,
+            )
+            # Письмо менеджеру
+            send_mail(
+                subject_manager,
+                message_manager,
+                settings.DEFAULT_FROM_EMAIL,
+                [manager_email],
+                fail_silently=True,
+            )
+            return True
+        except Exception:
+            return False
         return {
             'id': self.id,
             'first_name': self.first_name,
@@ -178,10 +405,17 @@ class Order(models.Model):
             'email': self.email,
             'phone': self.phone,
             'status': self.status,
+            'status_display': self.get_status_display(),
             'subtotal': self.subtotal,
             'delivery_cost': self.delivery_cost,
+            'bonus_used': self.bonus_used,
             'total': self.total,
+            'delivery_type': self.delivery_type,
+            'address': self.address,
+            'comment': self.comment,
+            'notes': self.notes,
             'created_at': self.created_at.isoformat(),
+            'status_updated_at': self.status_updated_at.isoformat() if self.status_updated_at else None,
             'order_items': [item.to_dict() for item in self.items.all()],
         }
 
@@ -310,3 +544,46 @@ class UserMeasurement(models.Model):
             elif avg_measure < 105: return 'L'
             elif avg_measure < 115: return 'XL'
             else: return 'XXL'
+            
+
+class BonusTransaction(models.Model):
+    """Модель для учёта всех операций с бонусами"""
+    TRANSACTION_TYPES = [
+        ('earn', 'Начисление'),
+        ('spend', 'Списание'),
+        ('cashback', 'Кэшбэк'),
+        ('refund', 'Возврат'),
+        ('adjust', 'Корректировка'),
+        ('expire', 'Списание по сроку'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bonus_transactions')
+    amount = models.IntegerField(help_text="Положительная — начисление, отрицательная — списание")
+    transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    order = models.ForeignKey('Order', null=True, blank=True, on_delete=models.SET_NULL, related_name='bonus_transactions')
+    balance_after = models.IntegerField(null=True, blank=True, help_text="Баланс после операции")
+    created_at = models.DateTimeField(auto_now_add=True)
+    description = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        sign = '+' if self.amount > 0 else ''
+        return f'{self.user.email}: {sign}{self.amount} ({self.get_transaction_type_display()})'
+
+    def save(self, *args, **kwargs):
+        if self.balance_after is None and self.user:
+            self.balance_after = self.user.bonus_balance
+        super().save(*args, **kwargs)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'amount': self.amount,
+            'transaction_type': self.transaction_type,
+            'transaction_type_display': self.get_transaction_type_display(),
+            'order_id': self.order.id if self.order else None,
+            'balance_after': self.balance_after,
+            'created_at': self.created_at.isoformat(),
+            'description': self.description,
+        }

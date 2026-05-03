@@ -16,8 +16,9 @@
             </div>
 
             <nav class="profile-nav">
-                <button class="profile-nav-item active" data-section="orders">📦 Мои заказы</button>
+                <button class="profile-nav-item active" data-section="orders">🛒 Мои заказы</button>
                 <button class="profile-nav-item" data-section="bonuses">💰 Бонусы</button>
+                <button class="profile-nav-item" data-section="transactions">📋 История бонусов</button>
                 <button class="profile-nav-item" data-section="measurements">📐 Мои размеры</button>
                 <button class="profile-nav-item" data-section="settings">⚙️ Настройки</button>
             </nav>
@@ -29,9 +30,12 @@
             <!-- Orders Section -->
             <div class="profile-section active" id="section-orders">
                 <h2>Мои заказы</h2>
+                <div style="margin-bottom: 16px;">
+                    <a href="{% url 'purchase_history' %}" class="btn btn-sm" style="background: #007bff; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 14px;">📋 Полная история покупок</a>
+                </div>
                 {% if orders %}
                 <div class="orders-list">
-                    {% for order in orders %}
+                    {% for order in orders|slice:":5" %}
                     <div class="order-card">
                         <div class="order-header">
                             <div>
@@ -47,15 +51,18 @@
                         </div>
                         <div class="order-footer">
                             <span class="order-total">{{ order.total }}₽</span>
-                            <a href="{% url 'order_success' order.id %}" class="btn btn-sm">Подробнее</a>
+                            <a href="{% url 'purchase_detail' order.id %}" class="btn btn-sm">Подробнее</a>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
-                <p style="margin-top: 20px;"><strong>Всего потрачено:</strong> {{ total_spent }}₽</p>
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="{% url 'purchase_history' %}" style="color: #007bff; text-decoration: none;">Посмотреть все заказы →</a>
+                </div>
+                <p style="margin-top: 16px;"><strong>Всего потрачено:</strong> {{ total_spent }}₽</p>
                 {% else %}
                 <div class="empty-section">
-                    <span class="empty-icon">📦</span>
+                    <span class="empty-icon">🛒</span>
                     <p>У вас пока нет заказов.</p>
                     <a href="{% url 'catalog' %}" class="btn btn-primary">Перейти в каталог</a>
                 </div>
@@ -105,7 +112,55 @@
                             <span class="level-cashback">10% кэшбэк</span>
                         </div>
                     </div>
+
+                    <div style="margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px; font-size: 14px; color: #666;">
+                        <p style="margin: 0 0 8px 0;"><strong>Как работает:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>Бронзовый — 3% кэшбэк (от 0₽)</li>
+                            <li>Серебряный — 5% кэшбэк (от 5000₽)</li>
+                            <li>Золотой — 10% кэшбэк (от 15000₽)</li>
+                            <li>Уровень обновляется автоматически при достижении суммы</li>
+                        </ul>
+                    </div>
                 </div>
+            </div>
+
+            <!-- Transactions Section -->
+            <div class="profile-section" id="section-transactions">
+                <h2>История операций с бонусами</h2>
+                {% if bonus_transactions %}
+                <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    {% for tx in bonus_transactions %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; {% if not forloop.last %}border-bottom: 1px solid #eee;{% endif %}">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 20px;">
+                                {% if tx.transaction_type == 'earn' or tx.transaction_type == 'cashback' %}💰
+                                {% elif tx.transaction_type == 'spend' %}💸
+                                {% elif tx.transaction_type == 'refund' %}↩️
+                                {% else %}⚙️{% endif %}
+                            </span>
+                            <div>
+                                <div style="font-weight: 500; font-size: 14px;">{{ tx.get_transaction_type_display }}</div>
+                                <div style="font-size: 12px; color: #666;">{{ tx.created_at|date:"d.m.Y H:i" }}</div>
+                                {% if tx.description %}<div style="font-size: 12px; color: #999;">{{ tx.description }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; font-size: 15px; color: {% if tx.amount > 0 %}#28a745{% else %}#dc3545{% endif %};">
+                                {% if tx.amount > 0 %}+{% endif %}{{ tx.amount }} бонусов
+                            </div>
+                            <div style="font-size: 12px; color: #999;">Баланс: {{ tx.balance_after }}₽</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 12px;">
+                    <div style="font-size: 64px; margin-bottom: 16px;">📋</div>
+                    <h3>Операций пока нет</h3>
+                    <p style="color: #666;">История начнётся после первых покупок</p>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Measurements Section -->
@@ -205,7 +260,7 @@
                     <button type="submit" class="btn btn-primary">Сохранить изменения</button>
                 </form>
 
-                <h3 style="margin: 40px 0 16px;">Смена пароля</h3>
+                <h3 style="margin: 40px 0 16px 0;">Смена пароля</h3>
                 <form class="profile-form" id="passwordForm">
                     <div class="form-group">
                         <label for="old_password">Текущий пароль</label>
@@ -225,7 +280,7 @@
                     <button type="submit" class="btn btn-primary">Изменить пароль</button>
                 </form>
 
-                <h3 style="margin: 40px 0 16px;">Платёжные данные</h3>
+                <h3 style="margin: 40px 0 16px 0;">Платёжные данные</h3>
                 <form class="profile-form" id="paymentForm">
                     <div class="form-group">
                         <label for="card_number">Номер карты</label>
@@ -339,7 +394,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function getCookie(name) {
         var value = "; " + document.cookie;
-        var parts = value.split(";" + name + "=");
+        var parts = value.split("; " + name + "=");
         if (parts.length === 2) return parts.pop().split(";").shift();
         return '';
     }
@@ -358,28 +413,90 @@ document.addEventListener('DOMContentLoaded', function() {
         measurementsForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             var formData = new FormData(this);
-            var data = Object.fromEntries(formData.entries());
             try {
                 var response = await fetch('/api/measurements/update/', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                    body: JSON.stringify(data)
+                    body: JSON.stringify(Object.fromEntries(formData.entries()))
                 });
                 var result = await response.json();
                 if (result.success) {
                     showToast('Размеры сохранены');
-                    if (profileMannequin) {
+                    if (profileMannequin && result.measurements) {
                         profileMannequin.updateMeasurements({
-                            height: data.height || 170,
-                            chest: data.chest || 92,
-                            waist: data.waist || 76,
-                            hips: data.hips || 98,
-                            shoulders: data.shoulders || 116,
-                            armLength: data.arm_length || 58,
-                            legLength: data.leg_length || 80
+                            height: result.measurements.height || 170,
+                            chest: result.measurements.chest || 92,
+                            waist: result.measurements.waist || 76,
+                            hips: result.measurements.hips || 98,
+                            shoulders: result.measurements.shoulders || 116,
+                            armLength: result.measurements.arm_length || 58,
+                            legLength: result.measurements.leg_length || 80
                         });
                     }
                 }
+            } catch (err) { showToast('Ошибка'); }
+        });
+    }
+
+    // Profile form
+    var profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            try {
+                var response = await fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(Object.fromEntries(formData.entries()))
+                });
+                var result = await response.json();
+                if (result.success) showToast('Профиль обновлён');
+            } catch (err) { showToast('Ошибка'); }
+        });
+    }
+
+    // Password form
+    var passwordForm = document.getElementById('passwordForm');
+    if (passwordForm) {
+        passwordForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var data = Object.fromEntries(new FormData(this).entries());
+            if (data.new_password !== data.confirm_password) {
+                showToast('Пароли не совпадают');
+                return;
+            }
+            try {
+                var response = await fetch('/api/profile/password/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify({ old_password: data.old_password, new_password: data.new_password })
+                });
+                var result = await response.json();
+                if (result.success) {
+                    showToast('Пароль изменён');
+                    passwordForm.reset();
+                } else {
+                    showToast(result.error || 'Ошибка');
+                }
+            } catch (err) { showToast('Ошибка'); }
+        });
+    }
+
+    // Payment form
+    var paymentForm = document.getElementById('paymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+            try {
+                var response = await fetch('/api/profile/update/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(Object.fromEntries(formData.entries()))
+                });
+                var result = await response.json();
+                if (result.success) showToast('Карта сохранена');
             } catch (err) { showToast('Ошибка'); }
         });
     }

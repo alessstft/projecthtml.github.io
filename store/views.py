@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from .forms import LoginForm, RegisterForm
-from .models import Category, Product, Order, OrderItem, CartItem, Review, User, UserMeasurement
+from .models import Category, Product, Order, OrderItem, CartItem, Review, User, UserMeasurement, BonusTransaction
 
 
 def get_session_key(request):
@@ -89,7 +89,12 @@ def product_detail(request, product_id):
 def cart_page(request):
     cart_items = get_cart_items(request)
     cart_total = sum(item.product.price * item.quantity for item in cart_items)
-    return render(request, 'cart.html', {'cart_items': cart_items, 'cart_total': cart_total})
+    amount_for_free_delivery = max(0, 3000 - cart_total)
+    return render(request, 'cart.html', {
+        'cart_items': cart_items,
+        'cart_total': cart_total,
+        'amount_for_free_delivery': amount_for_free_delivery,
+    })
 
 
 def checkout_page(request):
@@ -113,15 +118,23 @@ def order_success(request, order_id):
 @login_required
 def profile_view(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
-    total_spent = sum(o.total for o in orders if o.status not in ['cancelled', 'refunded'])
+    user = request.user
+
+    # Пересчёт суммы и уровня
+    user.recalc_total_spent()
+    user.update_bonus_level()
+
+    total_spent = user.total_spent_cached or 0
 
     # Calculate bonus progress
-    bonus_transactions = []
+    bonus_transactions = BonusTransaction.objects.filter(user=user)[:20]
     if total_spent < 5000:
         bonus_progress = (total_spent / 5000) * 100
         remaining_for_silver = 5000 - total_spent
+        remaining_for_gold = 15000 - total_spent
     elif total_spent < 15000:
-        bonus_progress = 100
+        bonus_progress = ((total_spent - 5000) / 10000) * 100
+        remaining_for_silver = 0
         remaining_for_gold = 15000 - total_spent
     else:
         bonus_progress = 100
@@ -131,9 +144,9 @@ def profile_view(request):
     return render(request, 'profile.html', {
         'orders': orders,
         'total_spent': total_spent,
-        'bonus_progress': bonus_progress if 'bonus_progress' in dir() else 0,
-        'remaining_for_silver': remaining_for_silver if 'remaining_for_silver' in dir() else 0,
-        'remaining_for_gold': remaining_for_gold if 'remaining_for_gold' in dir() else 0,
+        'bonus_progress': bonus_progress,
+        'remaining_for_silver': remaining_for_silver,
+        'remaining_for_gold': remaining_for_gold,
         'bonus_transactions': bonus_transactions,
     })
 
@@ -254,6 +267,15 @@ def api_update_cart_item(request, item_id):
     data = json_body(request)
     quantity = int(data.get('quantity', 1))
     item = get_object_or_404(CartItem, pk=item_id)
+    # Проверка: товар должен принадлежать текущей сессии или пользователю
+    session_key = get_session_key(request)
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        if item.user_id and item.user_id != user.id:
+            return JsonResponse({'error': 'Access denied'}, status=403)
+    else:
+        if item.session_key != session_key:
+            return JsonResponse({'error': 'Access denied'}, status=403)
     if quantity <= 0:
         item.delete()
     else:
@@ -265,6 +287,14 @@ def api_update_cart_item(request, item_id):
 @csrf_exempt
 def api_remove_cart_item(request, item_id):
     item = get_object_or_404(CartItem, pk=item_id)
+    session_key = get_session_key(request)
+    user = request.user if request.user.is_authenticated else None
+    if user:
+        if item.user_id and item.user_id != user.id:
+            return JsonResponse({'error': 'Access denied'}, status=403)
+    else:
+        if item.session_key != session_key:
+            return JsonResponse({'error': 'Access denied'}, status=403)
     item.delete()
     return JsonResponse({'success': True})
 
@@ -279,10 +309,19 @@ def api_clear_cart(request):
 @csrf_exempt
 def api_create_order(request):
     data = json_body(request)
-    first_name = data.get('first_name', '')
-    last_name = data.get('last_name', '')
-    email = data.get('email', '')
-    phone = data.get('phone', '')
+    
+    # Если пользователь авторизован — берем данные из профиля
+    if request.user.is_authenticated:
+        first_name = request.user.name or ''
+        last_name = request.user.last_name or ''
+        email = request.user.email or ''
+        phone = request.user.phone or ''
+    else:
+        first_name = data.get('first_name', '')
+        last_name = data.get('last_name', '')
+        email = data.get('email', '')
+        phone = data.get('phone', '')
+    
     delivery_type = data.get('delivery_type', 'courier')
     address = data.get('address', '')
     comment = data.get('comment', '')
@@ -296,15 +335,8 @@ def api_create_order(request):
     delivery_cost = 0 if subtotal >= 3000 else (550 if delivery_type == 'express' else 350)
     if delivery_type == 'pickup':
         delivery_cost = 0
-    total = subtotal + delivery_cost - bonus_used
+    total = max(0, subtotal + delivery_cost - bonus_used)
     user = request.user if request.user.is_authenticated else None
-
-    if user and bonus_used > 0:
-        if user.bonus_balance >= bonus_used:
-            user.bonus_balance -= bonus_used
-            user.save()
-        else:
-            bonus_used = 0
 
     order = Order.objects.create(
         user=user,
@@ -313,6 +345,7 @@ def api_create_order(request):
         email=email,
         phone=phone,
         delivery_type=delivery_type,
+        payment_method=data.get('payment_method', 'card'),
         address=address,
         comment=comment,
         bonus_used=bonus_used,
@@ -321,6 +354,24 @@ def api_create_order(request):
         total=total,
         status='new',
     )
+
+    # Списание бонусов после создания заказа
+    if user and bonus_used > 0:
+        if user.bonus_balance >= bonus_used:
+            user.bonus_balance -= bonus_used
+            user.save(update_fields=['bonus_balance'])
+            BonusTransaction.objects.create(
+                user=user,
+                amount=-bonus_used,
+                transaction_type='spend',
+                order=order,
+                balance_after=user.bonus_balance,
+                description=f'Списание бонусов за заказ #{order.id}'
+            )
+        else:
+            bonus_used = 0
+            order.bonus_used = 0
+            order.save(update_fields=['bonus_used'])
 
     for item in items:
         OrderItem.objects.create(
@@ -340,7 +391,128 @@ def api_create_order(request):
         user.save()
 
     items.delete()
+    # Отправляем уведомление о новом заказе
+    order.send_notification()
     return JsonResponse({'success': True, 'order_id': order.id})
+
+
+@login_required
+@csrf_exempt
+def api_pay_order(request, order_id):
+    """Имитация оплаты заказа"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    if order.status not in ['new', 'processing']:
+        return JsonResponse({'error': 'Заказ уже оплачен или отменён'}, status=400)
+    
+    # Имитируем оплату (в реальности здесь был бы вызов платёжного шлюза)
+    old_status = order.status
+    order.status = 'processing'
+    order.save(update_fields=['status'])
+    
+    # Отправляем уведомление
+    order.send_notification()
+    
+    return JsonResponse({'success': True, 'message': 'Оплата прошла успешно'})
+
+
+@login_required
+def purchase_history(request):
+    """История покупок с фильтрами и пагинацией"""
+    from django.core.paginator import Paginator
+
+    orders = Order.objects.filter(user=request.user)
+
+    # Фильтры
+    status_filter = request.GET.get('status', '')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search = request.GET.get('search', '')
+
+    if status_filter:
+        orders = orders.filter(status=status_filter)
+    if date_from:
+        from datetime import datetime
+        try:
+            df = datetime.strptime(date_from, '%Y-%m-%d')
+            orders = orders.filter(created_at__gte=df)
+        except ValueError:
+            pass
+    if date_to:
+        from datetime import datetime
+        try:
+            dt = datetime.strptime(date_to, '%Y-%m-%d')
+            orders = orders.filter(created_at__lte=dt)
+        except ValueError:
+            pass
+    if search:
+        orders = orders.filter(
+            Q(first_name__icontains=search) |
+            Q(last_name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(pk__icontains=search)
+        )
+
+    orders = orders.order_by('-created_at')
+
+    # Пагинация
+    paginator = Paginator(orders, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Статистика
+    all_orders = Order.objects.filter(user=request.user)
+    stats = {
+        'total_orders': all_orders.count(),
+        'total_spent': sum(o.total for o in all_orders if o.status != 'cancelled'),
+        'avg_order': 0,
+        'delivered_count': all_orders.filter(status='delivered').count(),
+    }
+    if stats['total_orders'] > 0:
+        stats['avg_order'] = int(stats['total_spent'] / stats['total_orders'])
+
+    return render(request, 'purchase_history.html', {
+        'page_obj': page_obj,
+        'orders': page_obj.object_list,
+        'stats': stats,
+        'status_filter': status_filter,
+        'date_from': date_from,
+        'date_to': date_to,
+        'search': search,
+        'status_choices': Order.STATUS_CHOICES,
+    })
+
+
+@login_required
+def purchase_detail(request, order_id):
+    """Детальная страница заказа"""
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    return render(request, 'purchase_detail.html', {'order': order})
+
+
+@login_required
+@csrf_exempt
+def api_reorder(request, order_id):
+    """Повторить заказ — добавить товары в корзину"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    added = 0
+    for item in order.items.all():
+        if item.product:
+            session_key = get_session_key(request)
+            cart_item, created = CartItem.objects.get_or_create(
+                session_key=session_key,
+                product=item.product,
+                size=item.size or 'M',
+                defaults={'user': request.user, 'quantity': item.quantity}
+            )
+            if not created:
+                cart_item.quantity += item.quantity
+                cart_item.save()
+            added += 1
+    return JsonResponse({'success': True, 'added': added})
 
 
 @login_required
@@ -402,8 +574,9 @@ def api_update_profile(request):
     request.user.phone = data.get('phone', request.user.phone)
     request.user.payment_method = data.get('payment_method', request.user.payment_method)
     if 'card_number' in data:
-        card_number = data.get('card_number', '')
-        request.user.card_number = card_number.replace(' ', '')[-4:]
+        card_number = data.get('card_number', '').replace(' ', '')
+        # Сохраняем только последние 4 цифры для отображения
+        request.user.card_number = card_number[-4:] if len(card_number) >= 4 else card_number
     request.user.card_holder = data.get('card_holder', request.user.card_holder).upper()
     request.user.card_expiry = data.get('card_expiry', request.user.card_expiry)
     request.user.save()
@@ -532,7 +705,7 @@ def api_admin_update_product(request, product_id):
     product.name = data.get('name', product.name)
     product.sku = data.get('sku', product.sku)
     product.price = int(data.get('price', product.price))
-    product.old_price = int(data['old_price']) if data.get('old_price') else None
+    product.old_price = int(data['old_price']) if data.get('old_price') and str(data.get('old_price', '')).isdigit() else None
     product.description = data.get('description', product.description)
     product.is_new = data.get('is_new', product.is_new)
     product.is_popular = data.get('is_popular', product.is_popular)
@@ -603,6 +776,16 @@ def api_admin_update_category(request, category_id):
     category.name = name
     category.slug = slug
     category.save()
+    return JsonResponse({'success': True})
+
+
+@login_required
+@csrf_exempt
+def api_admin_delete_product(request, product_id):
+    if request.user.role != 'admin':
+        return JsonResponse({'error': 'Access denied'}, status=403)
+    product = get_object_or_404(Product, pk=product_id)
+    product.delete()
     return JsonResponse({'success': True})
 
 

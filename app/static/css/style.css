@@ -173,6 +173,31 @@ img {
     to { transform: translateX(-50%); }
 }
 
+.cart-footer {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #333;
+}
+
+.cart-footer .btn {
+    width: 100%;
+    margin: 8px 0;
+    padding: 14px;
+    font-size: 16px;
+}
+
+.btn-checkout {
+    background: #00cc66;
+    color: white;
+    font-weight: 600;
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #555;
+    color: #ddd;
+}
+
 .hero {
     text-align: center;
     padding: 50px 20px;

@@ -67,12 +67,12 @@
                     </span>
                 </div>
 
-                <a href="{% url 'checkout' %}" class="btn btn-primary btn-checkout">Оформить заказ</a>
+                <a href="#" class="btn btn-primary btn-checkout" id="checkoutBtn">Оформить заказ</a>
 
                 <div class="free-delivery-hint">
                     <span>🚚</span>
                     {% if cart_total < 3000 %}
-                    <span>Добавьте ещё <strong>{{ 3000|subtract:cart_total }}</strong>₽ для бесплатной доставки</span>
+                    <span>Добавьте ещё <strong>{{ amount_for_free_delivery }}</strong>₽ для бесплатной доставки</span>
                     {% else %}
                     <span>У вас бесплатная доставка!</span>
                     {% endif %}
@@ -144,16 +144,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function removeItem(itemId) {
-        try {
-            var response = await fetch('/api/cart/remove/' + itemId + '/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({})
-            });
+        async function removeItem(itemId) {
+            try {
+                var response = await fetch('/api/cart/remove/' + itemId + '/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({})
+                });
+                location.reload();
+            } catch (err) {
+                showToast('Ошибка удаления');
+            }
+        }
+
+        // Оформление заказа из корзины
+        document.getElementById('checkoutBtn')?.addEventListener('click', async function(e) {
+            e.preventDefault();
+            if (!confirm('Подтвердить оформление заказа?')) return;
+
+            try {
+                var response = await fetch('/api/checkout/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({})
+                });
+                var result = await response.json();
+                if (result.success) {
+                    window.location.href = '/order-success/' + result.order_id + '/';
+                } else {
+                    showToast(result.error || 'Ошибка оформления заказа');
+                }
+            } catch (err) {
+                showToast('Ошибка оформления заказа');
+            }
+        });
+    });
             location.reload();
         } catch (err) {
             showToast('Ошибка удаления');

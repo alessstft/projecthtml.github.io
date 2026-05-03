@@ -11,102 +11,32 @@
     <div class="checkout-layout">
         <div class="checkout-form-section">
             <form class="checkout-form" id="checkoutForm">
-                <div class="checkout-step active" data-step="1">
-                    <h2>Шаг 1: Контактные данные</h2>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="first_name">Имя *</label>
-                            <input type="text" id="first_name" name="first_name" value="{{ user.name }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="last_name">Фамилия</label>
-                            <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}">
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" value="{{ user.email }}" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="phone">Телефон *</label>
-                            <input type="tel" id="phone" name="phone" value="{{ user.phone }}" placeholder="+7 (999) 123-45-67" required>
-                        </div>
+                <div class="order-confirmation">
+                    <h2>Подтверждение заказа</h2>
+                    <p>Ваш заказ будет оформлен с данными вашего профиля</p>
+                    
+                    {% if user.is_authenticated %}
+                    <div class="user-info">
+                        <p><strong>Имя:</strong> {{ user.name }} {{ user.last_name }}</p>
+                        <p><strong>Email:</strong> {{ user.email }}</p>
+                        <p><strong>Телефон:</strong> {{ user.phone }}</p>
                     </div>
-                    <div class="step-buttons">
-                        <button type="button" class="btn btn-primary next-step">Далее →</button>
+                    {% else %}
+                    <div class="form-group">
+                        <label for="email">Email для уведомлений *</label>
+                        <input type="email" id="email" name="email" required placeholder="example@mail.com">
                     </div>
-                </div>
-
-                <div class="checkout-step" data-step="2">
-                    <h2>Шаг 2: Доставка</h2>
-
-                    <div class="delivery-options">
-                        <label class="delivery-option selected">
-                            <input type="radio" name="delivery_type" value="courier" checked>
-                            <div class="delivery-info">
-                                <span class="delivery-name">Курьер</span>
-                                <span class="delivery-desc">Доставка до двери</span>
-                            </div>
-                            <span class="delivery-price">{{ delivery_courier }}₽</span>
-                        </label>
-
-                        <label class="delivery-option">
-                            <input type="radio" name="delivery_type" value="pickup">
-                            <div class="delivery-info">
-                                <span class="delivery-name">Самовывоз</span>
-                                <span class="delivery-desc">Из нашего склада</span>
-                            </div>
-                            <span class="delivery-price free">Бесплатно</span>
-                        </label>
-
-                        <label class="delivery-option">
-                            <input type="radio" name="delivery_type" value="express">
-                            <div class="delivery-info">
-                                <span class="delivery-name">Экспресс</span>
-                                <span class="delivery-desc">Доставка за 1-2 часа</span>
-                            </div>
-                            <span class="delivery-price">{{ delivery_express }}₽</span>
-                        </label>
-                    </div>
-
-                    <div class="address-fields">
-                        <div class="form-group">
-                            <label for="address">Адрес доставки</label>
-                            <textarea id="address" name="address" rows="3" placeholder="Город, улица, дом, квартира"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="step-buttons">
-                        <button type="button" class="btn prev-step">← Назад</button>
-                        <button type="button" class="btn btn-primary next-step">Далее →</button>
-                    </div>
-                </div>
-
-                <div class="checkout-step" data-step="3">
-                    <h2>Шаг 3: Оплата</h2>
-
-                    <div class="payment-options">
-                        <label class="payment-option selected">
-                            <input type="radio" name="payment_method" value="card" checked>
-                            <span class="payment-icon">💳</span>
-                            <span class="payment-name">Карта онлайн</span>
-                        </label>
-
-                        <label class="payment-option">
-                            <input type="radio" name="payment_method" value="receiving">
-                            <span class="payment-icon">💵</span>
-                            <span class="payment-name">При получении</span>
-                        </label>
-                    </div>
-
+                    {% endif %}
+                    
                     <div class="form-group">
                         <label for="comment">Комментарий к заказу</label>
                         <textarea id="comment" name="comment" rows="3" placeholder="Дополнительные пожелания..."></textarea>
                     </div>
+                </div>
 
-                    <div class="step-buttons">
-                        <button type="button" class="btn prev-step">← Назад</button>
-                        <button type="submit" class="btn btn-primary">Оформить заказ</button>
-                    </div>
+                <div class="step-buttons">
+                    <a href="{% url 'cart' %}" class="btn">← Вернуться в корзину</a>
+                    <button type="submit" class="btn btn-primary">Подтвердить заказ</button>
                 </div>
             </form>
         </div>
@@ -135,7 +65,9 @@
                     </div>
                     <div class="total-row">
                         <span>Доставка:</span>
-                        <span id="summaryDelivery">350₽</span>
+                        <span id="summaryDelivery">
+                            {% if cart_total >= 3000 %}Бесплатно{% else %}350₽{% endif %}
+                        </span>
                     </div>
                     <div class="total-row grand-total">
                         <span>Итого:</span>
@@ -160,85 +92,10 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var currentStep = 1;
-    var deliveryCost = {{ delivery_courier }};
-    var cartTotal = {{ cart_total }};
-    var freeDelivery = 3000;
-
-    // Delivery options
-    document.querySelectorAll('.delivery-option input').forEach(function(input) {
-        input.addEventListener('change', function() {
-            document.querySelectorAll('.delivery-option').forEach(function(opt) { opt.classList.remove('selected'); });
-            this.closest('.delivery-option').classList.add('selected');
-
-            var type = this.value;
-            if (type === 'pickup') {
-                deliveryCost = 0;
-            } else if (type === 'express') {
-                deliveryCost = {{ delivery_express }};
-            } else {
-                deliveryCost = {{ delivery_courier }};
-            }
-
-            updateTotals();
-        });
-    });
-
-    function updateTotals() {
-        var total = cartTotal + deliveryCost;
-        if (cartTotal >= freeDelivery) {
-            deliveryCost = 0;
-            total = cartTotal;
-        }
-
-        document.getElementById('summaryDelivery').textContent = deliveryCost === 0 ? 'Бесплатно' : deliveryCost + '₽';
-        document.getElementById('summaryTotal').textContent = total + '₽';
-    }
-
-    // Steps navigation
-    document.querySelectorAll('.next-step').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var current = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
-            var inputs = current.querySelectorAll('input[required]');
-            var valid = true;
-            inputs.forEach(function(input) {
-                if (!input.value.trim()) {
-                    input.style.borderColor = '#ef4444';
-                    valid = false;
-                } else {
-                    input.style.borderColor = '';
-                }
-            });
-
-            if (!valid) return;
-
-            current.classList.remove('active');
-            currentStep++;
-            var next = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
-            if (next) {
-                next.classList.add('active');
-            }
-        });
-    });
-
-    document.querySelectorAll('.prev-step').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var current = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
-            current.classList.remove('active');
-            currentStep--;
-            var prev = document.querySelector('.checkout-step[data-step="' + currentStep + '"]');
-            if (prev) {
-                prev.classList.add('active');
-            }
-        });
-    });
-
-    // Form submit
     document.getElementById('checkoutForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
         var formData = new FormData(this);
         var data = Object.fromEntries(formData.entries());
-        data.delivery_cost = deliveryCost;
 
         try {
             var response = await fetch('/api/checkout/create/', {

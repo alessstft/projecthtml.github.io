@@ -1,5 +1,13 @@
 // Fashion Store - Shop Functions
 
+// XSS protection: escape HTML characters
+function escapeHtml(text) {
+    if (!text && text !== 0) return '';
+    return String(text).replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[char]);
+}
+
 function createProductCardHTML(product) {
     const hasOld = !!product.oldPrice;
     const isNew = !!product.isNew;
@@ -10,14 +18,14 @@ function createProductCardHTML(product) {
     const categoryName = product.category === 'hoodies' ? 'Худи' : product.category === 'tshirts' ? 'Футболки' : 'Рубашки';
 
     return `
-        <article class="card" data-id="${product.id}" data-category="${product.category}" data-price="${product.price}" data-new="${product.isNew ? '1' : '0'}">
+        <article class="card" data-id="${product.id}" data-category="${escapeHtml(product.category)}" data-price="${product.price}" data-new="${product.isNew ? '1' : '0'}">
             <a href="/product/${product.id}" class="card-link">
                 <div class="card-image">
-                    <img src="${product.image}" alt="${product.name}">
+                    <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">
                     ${badges.join('')}
                 </div>
                 <div class="card-info">
-                    <h3 class="card-title">${product.name}</h3>
+                    <h3 class="card-title">${escapeHtml(product.name)}</h3>
                     <p class="card-category">${categoryName}</p>
                     <p class="card-price">
                         ${hasOld ? `<span class="old-price">${product.oldPrice}₽</span>` : ''}

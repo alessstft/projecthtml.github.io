@@ -6,7 +6,6 @@ urlpatterns = [
     path('catalog/', views.catalog, name='catalog'),
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('cart/', views.cart_page, name='cart'),
-    path('checkout/', views.checkout_page, name='checkout'),
     path('order-success/<int:order_id>/', views.order_success, name='order_success'),
     path('profile/', views.profile_view, name='profile'),
     path('about/', views.about, name='about'),
@@ -39,6 +38,12 @@ urlpatterns = [
     path('api/profile/update/', views.api_update_profile, name='api_update_profile'),
     path('api/profile/password/', views.api_change_password, name='api_change_password'),
     path('api/user/', views.api_current_user, name='api_current_user'),
+
+    # Purchase History
+    path('purchase-history/', views.purchase_history, name='purchase_history'),
+    path('purchase/<int:order_id>/', views.purchase_detail, name='purchase_detail'),
+    path('api/order/<int:order_id>/reorder/', views.api_reorder, name='api_reorder'),
+    path('api/order/<int:order_id>/pay/', views.api_pay_order, name='api_pay_order'),
 
     # Admin API - Products
     path('api/admin/products/', views.api_admin_create_product, name='api_admin_create_product'),

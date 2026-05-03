@@ -3,7 +3,9 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'fashion-store-secret-key-2026')
+# WARNING: In production, set DJANGO_SECRET_KEY environment variable
+# Generate with: python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY') or 'django-insecure-1234567890abcdef1234567890abcdef12345678'
 DEBUG = True
 ALLOWED_HOSTS = []
 
@@ -73,7 +75,13 @@ LANGUAGE_CODE = 'ru-ru'
 TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 USE_L10N = True
-USE_TZ = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'Marketolog.icht@gmail.com'
+EMAIL_HOST_PASSWORD = 'dgzy mlot bmmm ippq'  # App Password from Google
+DEFAULT_FROM_EMAIL = 'Marketolog.icht@gmail.com'
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'app' / 'static']
